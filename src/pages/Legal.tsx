@@ -22,7 +22,7 @@ export function Privacy() {
       <p>OweWise helps you keep a private record of money you owe. This policy explains what personal data we handle and your rights under the Kenya Data Protection Act, 2019.</p>
 
       <h2>Who is responsible for your data</h2>
-      <p>{OPERATOR_NAME} (&ldquo;we&rdquo;) is the data controller. Contact us at {CONTACT_EMAIL}.</p>
+      <p>{OPERATOR_NAME} (&ldquo;we&rdquo;) is the data controller. Contact us by email at {CONTACT_EMAIL}.</p>
 
       <h2>What we collect</h2>
       <ul>

@@ -50,4 +50,4 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - Live deploy confirmed with security headers and SPA redirect.
 - "Powered by Netlify" badge is a Netlify setting: Project configuration > General > Powered by Netlify badge (switch off). Not controllable from code.
 - Added: PNG app icons + apple-touch-icon, receipts section on each debt, edit goals, "show more" on payments, real PDF statement (jspdf, lazy loaded), login bottom padding. 0 production npm vulnerabilities.
-- Still to do: fill OPERATOR_NAME and CONTACT_EMAIL in src/lib/legal.ts (owner must supply); lawyer review; ODPC registration; SMTP/Resend; Paystack; reminders email/SMS; AI assistant; phone login; custom domain.
+- Legal contact set (email only; operator name currently just "OweWise", owner should give full legal name or business name). Still to do: lawyer review; ODPC registration; SMTP/Resend; Paystack; reminders email/SMS; AI assistant; phone login; custom domain.
