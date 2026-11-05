@@ -44,3 +44,10 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - Blocker: the GitHub link in Claude only lists the owner's 4 other public repos (smartbasket-kenya, goofreel, joshua.ai, efootball-squadlab) and does not include `owewise`. DO NOT push to those other repos. The owner has no computer (phone only). Owner was told to either make `owewise` public temporarily or revoke and reconnect GitHub with private-repo access; add_repo still failed after that.
 - Fallback: `owewise-source.zip` (49 files) and `owewise-netlify.zip` (built site) were sent to the owner.
 - Latest changes (security headers, Privacy/Terms, file cleanup on delete, router upgrade) are built into owewise-netlify.zip but NOT yet live on owewise.netlify.app.
+
+## Update 2026-11-05
+- Auto-deploy works: GitHub Actions (`.github/workflows/deploy.yml`) builds, tests and deploys to Netlify on every push to `main` (secret NETLIFY_AUTH_TOKEN set by owner). Netlify's own Git linking is NOT used. The sandbox cannot reach netlify.app or supabase.co.
+- Live deploy confirmed with security headers and SPA redirect.
+- "Powered by Netlify" badge is a Netlify setting: Project configuration > General > Powered by Netlify badge (switch off). Not controllable from code.
+- Added: PNG app icons + apple-touch-icon, receipts section on each debt, edit goals, "show more" on payments, real PDF statement (jspdf, lazy loaded), login bottom padding. 0 production npm vulnerabilities.
+- Still to do: fill OPERATOR_NAME and CONTACT_EMAIL in src/lib/legal.ts (owner must supply); lawyer review; ODPC registration; SMTP/Resend; Paystack; reminders email/SMS; AI assistant; phone login; custom domain.

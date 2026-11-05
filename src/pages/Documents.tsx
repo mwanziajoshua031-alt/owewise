@@ -74,12 +74,12 @@ export default function Documents() {
   )
 }
 
-function Upload({ onClose, onDone, count }: { onClose: () => void; onDone: () => Promise<void>; count: number }) {
+export function Upload({ onClose, onDone, count, debtId: presetDebt }: { onClose: () => void; onDone: () => Promise<void>; count: number; debtId?: string }) {
   const { isPremium, debts } = useStore()
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [kind, setKind] = useState<DocumentRow['kind']>('receipt')
-  const [debtId, setDebtId] = useState('')
+  const [debtId, setDebtId] = useState(presetDebt ?? '')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 

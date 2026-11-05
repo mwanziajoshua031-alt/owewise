@@ -37,7 +37,7 @@ export default function Login() {
   }
 
   return (
-    <div className="grid min-h-full place-items-center bg-navy-900 px-4 py-10">
+    <div className="grid min-h-full place-items-center bg-navy-900 px-4 pb-28 pt-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center text-white">
           <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-brand-600 text-2xl font-extrabold">O</div>

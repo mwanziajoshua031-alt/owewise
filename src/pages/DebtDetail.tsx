@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Bell, Flag, Trash2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -6,7 +6,8 @@ import { useStore } from '../lib/store'
 import { useUI } from '../components/Layout'
 import { dueLabel, reversedIds } from '../lib/derive'
 import { formatMoney, parseAmountInput } from '../lib/money'
-import { DISPUTE_REASONS, METHOD_LABEL, type DebtBalance, type Payment } from '../lib/types'
+import { DISPUTE_REASONS, METHOD_LABEL, type DebtBalance, type DocumentRow, type Payment } from '../lib/types'
+import { Upload } from './Documents'
 import { Banner, Empty, Field, Modal, PendingTag, Spinner, StatusBadge, fmtDate } from '../components/ui'
 
 export default function DebtDetail() {
@@ -16,6 +17,24 @@ export default function DebtDetail() {
   const { addPayment } = useUI()
   const [modal, setModal] = useState<null | 'edit' | 'dispute' | 'reminder'>(null)
   const [reverse, setReverse] = useState<Payment | null>(null)
+  const [docs, setDocs] = useState<DocumentRow[]>([])
+  const [docTotal, setDocTotal] = useState(0)
+  const [addingDoc, setAddingDoc] = useState(false)
+  const loadDocs = useCallback(async () => {
+    if (!id) return
+    const [list, all] = await Promise.all([
+      supabase.from('documents').select('*').eq('debt_id', id).order('created_at', { ascending: false }),
+      supabase.from('documents').select('id', { count: 'exact', head: true }),
+    ])
+    setDocs((list.data ?? []) as DocumentRow[])
+    setDocTotal(all.count ?? 0)
+  }, [id])
+  useEffect(() => { void loadDocs() }, [loadDocs])
+  async function openDoc(d: DocumentRow) {
+    const { data, error } = await supabase.storage.from('documents').createSignedUrl(d.storage_path, 60)
+    if (error || !data) return setErr(error?.message ?? 'Could not open file')
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
   const [err, setErr] = useState('')
 
   if (loading) return <Spinner />
@@ -107,6 +126,24 @@ export default function DebtDetail() {
       )}
 
       <section className="card">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-bold">Receipts &amp; documents</h2>
+          <button className="text-sm font-semibold text-brand-700 underline dark:text-brand-400" disabled={debt.pending} onClick={() => setAddingDoc(true)}>Add</button>
+        </div>
+        {docs.length === 0 ? (
+          <p className="text-sm text-slate-500">No files attached to this debt.</p>
+        ) : (
+          <ul className="space-y-1">
+            {docs.map((d) => (
+              <li key={d.id}>
+                <button className="w-full truncate text-left text-sm underline" onClick={() => openDoc(d)}>{d.title}</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card">
         <h2 className="mb-2 font-bold">Payment history</h2>
         {mine.length === 0 ? (
           <p className="text-sm text-slate-500">No payments recorded yet.</p>
@@ -122,6 +159,7 @@ export default function DebtDetail() {
       {modal === 'edit' && <EditDebt debt={debt} onClose={() => setModal(null)} onDone={refresh} />}
       {modal === 'dispute' && <DisputeModal debtId={debt.id} onClose={() => setModal(null)} onDone={refresh} />}
       {modal === 'reminder' && <ReminderModal debt={debt} onClose={() => setModal(null)} onDone={refresh} />}
+      {addingDoc && <Upload debtId={debt.id} count={docTotal} onClose={() => setAddingDoc(false)} onDone={loadDocs} />}
       {reverse && <ReverseModal p={reverse} onClose={() => setReverse(null)} onSubmit={reversePayment} />}
     </>
   )

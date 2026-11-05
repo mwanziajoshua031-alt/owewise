@@ -14,13 +14,14 @@ export default function Payments() {
   const { addPayment } = useUI()
   const [reverse, setReverse] = useState<Payment | null>(null)
   const [reason, setReason] = useState('')
+  const [shown, setShown] = useState(60)
   const [err, setErr] = useState('')
   const reversed = useMemo(() => reversedIds(payments), [payments])
 
   if (loading) return <Spinner />
   if (error) return <ErrorBox message={error} onRetry={refresh} />
 
-  const groups = payments.reduce<Record<string, Payment[]>>((a, p) => {
+  const groups = payments.slice(0, shown).reduce<Record<string, Payment[]>>((a, p) => {
     const k = p.paid_on.slice(0, 7)
     ;(a[k] ??= []).push(p)
     return a
@@ -50,6 +51,9 @@ export default function Payments() {
             </ul>
           </section>
         ))
+      )}
+      {payments.length > shown && (
+        <button className="btn-secondary w-full" onClick={() => setShown((n) => n + 60)}>Show more ({payments.length - shown} older)</button>
       )}
       {reverse && (
         <Modal title="Reverse payment" onClose={() => setReverse(null)}>

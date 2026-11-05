@@ -4,10 +4,41 @@ import { useStore } from '../lib/store'
 import { currenciesOf, totalsFor } from '../lib/derive'
 import { formatMoney, parseAmountInput } from '../lib/money'
 import { Empty, Field, Modal, PageHeader, Spinner, fmtDate } from '../components/ui'
+import type { Goal } from '../lib/types'
+
+function EditGoal({ goal, onClose, onDone }: { goal: Goal; onClose: () => void; onDone: () => Promise<void> }) {
+  const [title, setTitle] = useState(goal.title)
+  const [target, setTarget] = useState(String(goal.target_amount))
+  const [date, setDate] = useState(goal.target_date ?? '')
+  const [err, setErr] = useState('')
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    if (!title.trim()) return setErr('Name your goal')
+    const t = parseAmountInput(target || '0', goal.currency, { allowZero: true })
+    if (!t.ok) return setErr(t.error)
+    if (t.value >= goal.start_amount) return setErr(`Target must be below the starting amount (${formatMoney(goal.start_amount, goal.currency)})`)
+    const { error } = await supabase.from('goals').update({ title: title.trim(), target_amount: t.value, target_date: date || null }).eq('id', goal.id)
+    if (error) return setErr(error.message)
+    await onDone()
+    onClose()
+  }
+  return (
+    <Modal title="Edit goal" onClose={onClose}>
+      <form onSubmit={save} className="space-y-3" noValidate>
+        <Field label="Goal"><input className="input" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
+        <Field label={`Target total owed (${goal.currency})`}><input className="input" inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
+        <Field label="Target date (optional)"><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+        {err && <p className="err" role="alert">{err}</p>}
+        <button className="btn-primary w-full">Save changes</button>
+      </form>
+    </Modal>
+  )
+}
 
 export default function Goals() {
   const { loading, goals, debts, refresh, profile } = useStore()
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Goal | null>(null)
   if (loading) return <Spinner />
 
   async function remove(id: string) {
@@ -35,7 +66,10 @@ export default function Goals() {
                     <p className="font-semibold">{g.title}</p>
                     <p className="text-xs text-slate-500">From {formatMoney(g.start_amount, g.currency)} to {formatMoney(g.target_amount, g.currency)}{g.target_date ? ` by ${fmtDate(g.target_date)}` : ''}</p>
                   </div>
-                  <button className="text-xs text-slate-500 underline" onClick={() => remove(g.id)}>Delete</button>
+                  <span className="flex gap-3">
+                    <button className="text-xs text-slate-500 underline" onClick={() => setEditing(g)}>Edit</button>
+                    <button className="text-xs text-slate-500 underline" onClick={() => remove(g.id)}>Delete</button>
+                  </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Goal progress">
                   <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
@@ -46,6 +80,7 @@ export default function Goals() {
           })}
         </ul>
       )}
+      {editing && <EditGoal goal={editing} onClose={() => setEditing(null)} onDone={refresh} />}
       {adding && <NewGoal onClose={() => setAdding(false)} onDone={refresh} defaultCurrency={currenciesOf(debts)[0] ?? profile?.default_currency ?? 'KES'} />}
     </>
   )

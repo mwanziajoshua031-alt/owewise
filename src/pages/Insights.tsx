@@ -4,6 +4,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { supabase } from '../lib/supabase'
 import { useStore } from '../lib/store'
 import { currenciesOf, download, isActive, toCSV } from '../lib/derive'
+import { exportPDF } from '../lib/pdf'
 import { addMonthsISO, formatMoney, parseAmountInput, planRepayment, todayNairobi, type PlanStrategy } from '../lib/money'
 import { Banner, Empty, ErrorBox, PageHeader, Spinner, fmtDate } from '../components/ui'
 
@@ -35,7 +36,7 @@ export default function Insights() {
       )}
       <MonthlyReport currency={cur} />
       <Planner currency={cur} />
-      <ExportCard isPremium={isPremium} debts={debts} payments={payments} creditors={creditors} />
+      <ExportCard isPremium={isPremium} debts={debts} payments={payments} creditors={creditors} userName={profile?.full_name} />
     </>
   )
 }
@@ -184,7 +185,8 @@ function Planner({ currency }: { currency: string }) {
   )
 }
 
-function ExportCard({ isPremium, debts, payments, creditors }: { isPremium: boolean; debts: ReturnType<typeof useStore>['debts']; payments: ReturnType<typeof useStore>['payments']; creditors: ReturnType<typeof useStore>['creditors'] }) {
+function ExportCard({ isPremium, debts, payments, creditors, userName }: { isPremium: boolean; debts: ReturnType<typeof useStore>['debts']; payments: ReturnType<typeof useStore>['payments']; creditors: ReturnType<typeof useStore>['creditors']; userName?: string | null }) {
+  const [busy, setBusy] = useState(false)
   const name = (id: string) => creditors.find((c) => c.id === id)?.name ?? ''
   return (
     <section className="card space-y-2">
@@ -199,7 +201,10 @@ function ExportCard({ isPremium, debts, payments, creditors }: { isPremium: bool
             ['Date', 'Debt', 'Type', 'Currency', 'Amount', 'Method', 'Reference', 'Note'],
             ...payments.map((p) => [p.paid_on, debts.find((d) => d.id === p.debt_id)?.description, p.kind, p.currency, p.amount, p.method, p.reference, p.note]),
           ]))}>Payments CSV</button>
-          <button className="btn-secondary col-span-2" onClick={() => window.print()}>Print / save as PDF</button>
+          <button className="btn-secondary col-span-2" disabled={busy} onClick={async () => {
+            setBusy(true)
+            try { await exportPDF({ debts, payments, creditors, name: userName }) } finally { setBusy(false) }
+          }}>{busy ? 'Preparing PDF…' : 'Download PDF statement'}</button>
         </div>
       ) : (
         <p className="text-sm text-slate-500">CSV and PDF exports are part of Premium. <Link className="font-semibold underline" to="/subscription">See Premium</Link>. You can always export all your data as JSON from Settings.</p>
