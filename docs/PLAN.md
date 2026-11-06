@@ -23,3 +23,9 @@ Branch: `two-sided-platform` (merge to `main` deploys the live site via GitHub A
 - Deleting a business account is blocked while it has debt records (financial-record retention vs erasure). Needs a "close and anonymise" flow and legal advice.
 - SMS/WhatsApp sending needs provider credentials. Until then: in-app notifications + shareable wa.me / sms: links opened from the business's own phone.
 - Daraja has no payload signature; defence is secret URL + status re-query + idempotency.
+
+## Progress log
+- 2026-11-06 Phase 1 DONE (database): applied to Supabase: two_sided_accounts, two_sided_debt_tables, two_sided_rls_and_helpers, two_sided_rpcs, revoke_trigger_fn_exec.
+  Tested in a rolled-back transaction: claim link single-use, pay-before-confirm blocked, overpay blocked, idempotent M-Pesa result, immutable payments, no delete, dispute blocks payment, stranger blocked, receipts numbered, audit rows written.
+  Security advisor: no errors. Owner TODO: turn on Leaked Password Protection in Supabase Auth settings.
+- Next: Phase 2 (app UI), Phase 3 (M-Pesa edge functions, needs Daraja credentials), Phase 4 (admin).
