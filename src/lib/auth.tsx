@@ -8,7 +8,7 @@ type AuthCtx = {
   user: User | null
   loading: boolean
   recovery: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<string | null>
+  signUp: (email: string, password: string, fullName: string, extra?: Record<string, string>) => Promise<string | null>
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<string | null>
@@ -40,13 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     loading,
     recovery,
-    async signUp(email, password, fullName) {
+    async signUp(email, password, fullName, extra = {}) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         // Record when and to which version of the terms the user agreed.
         options: {
-          data: { full_name: fullName, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION },
+          data: { ...extra, full_name: fullName, terms_accepted_at: new Date().toISOString(), terms_version: TERMS_VERSION },
           emailRedirectTo: window.location.origin,
         },
       })

@@ -1,6 +1,6 @@
 import { useEffect, useState, createContext, useContext } from 'react'
 import { NavLink, Outlet, Link } from 'react-router-dom'
-import { Home, ListChecks, Wallet, CalendarDays, BarChart3, FileText, Settings, Plus, Bell, WifiOff, CloudUpload } from 'lucide-react'
+import { Home, ListChecks, Wallet, CalendarDays, BarChart3, Settings, Plus, Bell, WifiOff, CloudUpload, Receipt } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { AddDebtModal, AddPaymentModal } from './forms'
 import { Banner } from './ui'
@@ -12,10 +12,10 @@ export const useUI = () => useContext(UICtx)
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/debts', label: 'Debts', icon: ListChecks },
+  { to: '/bills', label: 'Bills', icon: Receipt },
   { to: '/payments', label: 'Payments', icon: Wallet },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/insights', label: 'Insights', icon: BarChart3 },
-  { to: '/documents', label: 'Docs', icon: FileText },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 

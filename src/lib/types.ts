@@ -90,6 +90,7 @@ export type AppNotification = {
   title: string
   body: string | null
   debt_id: string | null
+  business_debt_id?: string | null
   read_at: string | null
   created_at: string
 }

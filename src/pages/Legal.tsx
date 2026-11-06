@@ -19,7 +19,7 @@ function Shell({ title, children }: { title: string; children: ReactNode }) {
 export function Privacy() {
   return (
     <Shell title="Privacy Policy">
-      <p>OweWise helps you keep a private record of money you owe. This policy explains what personal data we handle and your rights under the Kenya Data Protection Act, 2019.</p>
+      <p>OweWise helps you keep a private record of money you owe, and lets businesses send debt requests to customers and receive payments. This policy explains what personal data we handle and your rights under the Kenya Data Protection Act, 2019.</p>
 
       <h2>Who is responsible for your data</h2>
       <p>{OPERATOR_NAME} (&ldquo;we&rdquo;) is the data controller. Contact us by email at {CONTACT_EMAIL}.</p>
@@ -30,9 +30,11 @@ export function Privacy() {
         <li><b>Records you enter:</b> creditors (names, optional phone numbers and notes), debts, payments, reminders and goals.</li>
         <li><b>Files you upload:</b> receipts, invoices and similar documents.</li>
         <li><b>Sign-in and device data:</b> a session token and, so the app works offline, a copy of your records stored on your own device.</li>
+        <li><b>Business and customer records:</b> when a business sends you a debt request, the business enters your name, phone number, the amount, what it is for, and dates. Business accounts also give a business name, category, location and contact details. Payments, receipts, disputes and messages about a debt are visible to the business and the customer concerned, and to our administrators when needed to resolve a dispute, prevent fraud or meet a legal duty.</li>
+        <li><b>M-Pesa payment details:</b> when you pay by M-Pesa we record the amount, the phone number used, the M-Pesa receipt code and the result. Your M-Pesa PIN is entered on your phone and is never seen by us. Payments go directly to the business; OweWise does not hold customer money.</li>
         <li><b>Subscription status.</b> When paid plans are switched on, payments are handled by Paystack. We do not see or store your card details or M-Pesa PIN.</li>
       </ul>
-      <p>The records you enter may include other people&rsquo;s names and phone numbers (your creditors). Please enter only what you need.</p>
+      <p>The records you enter may include other people&rsquo;s names and phone numbers (your creditors or your customers). Please enter only what you need. Businesses are responsible for having a lawful reason to hold their customers&rsquo; details and to send them debt requests. If you received a debt request you do not recognise, you can dispute it in the app and report the business.</p>
 
       <h2>Why we use it</h2>
       <ul>
@@ -46,12 +48,13 @@ export function Privacy() {
       <ul>
         <li><b>Supabase</b> for the database, sign-in and file storage. Your data is stored in Ireland (EU West).</li>
         <li><b>Netlify</b> to host the website.</li>
+        <li><b>Safaricom (M-Pesa)</b> to process M-Pesa payments, when that feature is switched on.</li>
         <li>When the matching features are switched on: <b>Paystack</b> (payments), an <b>email provider</b> (reminders), an <b>SMS provider</b> (reminders) and <b>Anthropic</b> (the AI assistant, which receives your question and only the records needed to answer it).</li>
       </ul>
       <p>Because Ireland and some of these providers are outside Kenya, your data is transferred abroad. We use providers that apply security safeguards, and we transfer only what is needed.</p>
 
       <h2>How long we keep it</h2>
-      <p>We keep your records until you delete them or delete your account. Deleting your account removes your records and uploaded files. Short-lived backups held by our hosting provider may take a limited time to roll off.</p>
+      <p>We keep your records until you delete them or delete your account. Payment and receipt records tied to a business debt may be kept for as long as needed to keep both sides&rsquo; accounts accurate and to meet tax, audit and legal requirements; when a customer deletes their account, their name on those records is detached from their account. Deleting your account removes your records and uploaded files. Short-lived backups held by our hosting provider may take a limited time to roll off.</p>
 
       <h2>Your rights</h2>
       <p>You can ask to be told what we hold, to see it, to correct it, to object to its use, to have it deleted, and to receive a copy in a portable format. You can download all your data and delete your account yourself in Settings. For anything else, email {CONTACT_EMAIL}.</p>
@@ -78,6 +81,15 @@ export function Terms() {
 
       <h2>What OweWise is</h2>
       <p>OweWise is a personal record-keeping tool. It is not a lender, a bank, a credit bureau, or a debt collector. It does not pay your creditors, and it does not give financial or legal advice. Plans and projections use only the figures you enter, and do not include interest unless you add it as a charge.</p>
+
+      <h2>Businesses and customers</h2>
+      <ul>
+        <li>Businesses send debt requests and receive payments directly into their own M-Pesa Till or Paybill. OweWise is not a party to the debt, does not collect, lend or hold money, and does not decide who is right in a dispute.</li>
+        <li>Businesses must send only genuine debts they are owed, must not harass or threaten customers, and must not use OweWise to send unsolicited requests.</li>
+        <li>Customers can review a request, confirm it or dispute it before paying. A confirmed debt does not by itself create a legal obligation beyond what the law already provides.</li>
+        <li>Payment records are permanent. Mistakes are corrected by adding a reversal, not by editing history. A reversal records the correction; any refund of money is between the business and the customer.</li>
+        <li>We may suspend business accounts that break these terms or are reported for misuse.</li>
+      </ul>
 
       <h2>Your account</h2>
       <ul>

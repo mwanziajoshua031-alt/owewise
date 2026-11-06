@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type FormEvent } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DataProvider } from './lib/store'
 import Layout from './components/Layout'
@@ -10,6 +10,19 @@ import DebtDetail from './pages/DebtDetail'
 import Payments from './pages/Payments'
 import { Privacy, Terms } from './pages/Legal'
 import { Spinner } from './components/ui'
+import { AccountProvider, useAccount } from './lib/account'
+import { saveClaimToken, readClaimToken } from './lib/biz'
+import BizLayout from './pages/biz/BizLayout'
+import BizHome from './pages/biz/BizHome'
+import BizDebts from './pages/biz/BizDebts'
+import BizDebtDetail from './pages/biz/BizDebtDetail'
+import BizCustomers from './pages/biz/BizCustomers'
+import NewRequest from './pages/biz/NewRequest'
+import BizSettings from './pages/biz/BizSettings'
+import Alerts from './pages/Alerts'
+import Bills from './pages/Bills'
+import BillDetail from './pages/BillDetail'
+import Claim from './pages/Claim'
 
 // Heavier pages load on demand.
 const Calendar = lazy(() => import('./pages/Calendar'))
@@ -42,19 +55,55 @@ function NewPassword() {
   )
 }
 
-function Gate() {
-  const { session, loading, recovery } = useAuth()
-  if (loading) return <Spinner />
-  if (!session) return <Login />
-  if (recovery) return <NewPassword />
+// A debt-request link looks like /claim#<token>. The token stays in the URL fragment (never sent to servers);
+// we keep it on this device until the person signs in and claims it.
+function captureClaim() {
+  if (window.location.pathname === '/claim' && window.location.hash.length > 20) {
+    saveClaimToken(window.location.hash.slice(1))
+    window.history.replaceState(null, '', '/claim')
+  }
+}
+
+function ClaimRedirect() {
+  const loc = useLocation()
+  if (readClaimToken() && loc.pathname !== '/claim') return <Navigate to="/claim" replace />
+  return null
+}
+
+function BusinessApp() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <ClaimRedirect />
+      <Routes>
+        <Route element={<BizLayout />}>
+          <Route index element={<BizHome />} />
+          <Route path="debts" element={<BizDebts />} />
+          <Route path="debts/:id" element={<BizDebtDetail />} />
+          <Route path="new" element={<NewRequest />} />
+          <Route path="customers" element={<BizCustomers />} />
+          <Route path="notifications" element={<Alerts />} />
+          <Route path="settings" element={<BizSettings />} />
+          <Route path="claim" element={<Claim />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  )
+}
+
+function CustomerApp() {
   return (
     <DataProvider>
       <Suspense fallback={<Spinner />}>
+        <ClaimRedirect />
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="debts" element={<Debts />} />
             <Route path="debts/:id" element={<DebtDetail />} />
+            <Route path="bills" element={<Bills />} />
+            <Route path="bills/:id" element={<BillDetail />} />
+            <Route path="claim" element={<Claim />} />
             <Route path="payments" element={<Payments />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="insights" element={<Insights />} />
@@ -68,6 +117,29 @@ function Gate() {
         </Routes>
       </Suspense>
     </DataProvider>
+  )
+}
+
+function RoleSwitch() {
+  const { type } = useAccount()
+  return type === 'business' ? <BusinessApp /> : <CustomerApp />
+}
+
+function Gate() {
+  const { session, loading, recovery } = useAuth()
+  captureClaim()
+  if (loading) return <Spinner />
+  if (!session) return <Login />
+  if (recovery) return <NewPassword />
+  return (
+    <AccountProvider
+      fallback={<Spinner />}
+      failed={(retry, msg) => (
+        <div className="grid min-h-full place-items-center px-4"><div className="card max-w-sm space-y-3"><p className="font-bold">Could not load your account</p><p className="text-sm text-slate-500">{msg}</p><button className="btn-primary w-full" onClick={retry}>Try again</button></div></div>
+      )}
+    >
+      <RoleSwitch />
+    </AccountProvider>
   )
 }
 

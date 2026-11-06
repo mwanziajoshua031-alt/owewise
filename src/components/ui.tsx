@@ -79,8 +79,10 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
     <div>
-      <label className="label">{label}</label>
-      {children}
+      <label className="block">
+        <span className="label">{label}</span>
+        {children}
+      </label>
       {error && <p className="err">{error}</p>}
     </div>
   )

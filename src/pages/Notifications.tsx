@@ -34,6 +34,7 @@ export default function Notifications() {
                 </div>
                 {!n.read_at && <button className="shrink-0 text-xs font-semibold underline" onClick={() => mark(n.id)}>Read</button>}
               </div>
+              {n.business_debt_id && <Link className="mt-1 inline-block text-xs font-semibold text-brand-700 dark:text-brand-400" to={`/bills/${n.business_debt_id}`}>View bill</Link>}
               {n.debt_id && <Link className="mt-1 inline-block text-xs font-semibold text-brand-700 dark:text-brand-400" to={`/debts/${n.debt_id}`}>View debt</Link>}
             </li>
           ))}

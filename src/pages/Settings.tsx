@@ -47,6 +47,7 @@ export default function Settings() {
   return (
     <>
       <PageHeader title="Settings" />
+      <Link to="/documents" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open my documents (receipts, invoices)</Link>
       <section className="card flex items-center justify-between">
         <div>
           <p className="text-xs text-slate-500">Signed in as</p>
