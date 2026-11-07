@@ -51,3 +51,12 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - "Powered by Netlify" badge is a Netlify setting: Project configuration > General > Powered by Netlify badge (switch off). Not controllable from code.
 - Added: PNG app icons + apple-touch-icon, receipts section on each debt, edit goals, "show more" on payments, real PDF statement (jspdf, lazy loaded), login bottom padding. 0 production npm vulnerabilities.
 - Legal contact set (email only; operator name currently just "OweWise", owner should give full legal name or business name). Still to do: lawyer review; ODPC registration; SMTP/Resend; Paystack; reminders email/SMS; AI assistant; phone login; custom domain.
+
+
+## 2026-11-07 update: two-sided platform
+- Account types: customer (personal tracker + Bills from businesses) and business (dashboard, send debt request, customers, payments, disputes, messages, M-Pesa setup). Admin panel at /admin for platform admins (table platform_admins; owner seeded).
+- Database: migrations two_sided_accounts, two_sided_debt_tables, two_sided_rls_and_helpers, two_sided_rpcs, revoke_trigger_fn_exec, disputes_raised_by_set_null, mpesa_settings_vault, admin_panel_rpcs. All financial writes go through SECURITY DEFINER RPCs; clients have no direct write access to financial tables. Payments are append-only.
+- Edge functions (source in supabase/functions): mpesa-stk-push, mpesa-callback, mpesa-status, mpesa-settings. Deployed with verify_jwt=false; each authenticates the user itself (callback uses a secret URL + Safaricom confirmation).
+- Claim link format: /claim#<token> (token in URL fragment; stored hash only in DB; single use; 30 days).
+- Untested: anything that talks to Safaricom. To test: create a Daraja sandbox app, then in a business account Settings > M-Pesa payments, enter sandbox credentials (Paybill 174379 + the public sandbox passkey), then pay from a customer account with a sandbox test number.
+- Owner TODOs: enable Leaked Password Protection (Supabase Auth); decide Daraja vs aggregator for real businesses; lawyer review of Privacy/Terms; ODPC registration; OPERATOR_NAME; Paystack for business plans; SMTP/Resend.

@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useAccount } from '../../lib/account'
 import { CONTACT_EMAIL } from '../../lib/legal'
-import { call, friendly, useLoad } from '../../lib/biz'
+import { call, friendly, useIsAdmin, useLoad } from '../../lib/biz'
 import { Banner, Field, PageHeader } from '../../components/ui'
 
 type MStatus = { configured: boolean; enabled?: boolean; environment?: string; account_type?: string; shortcode?: string; till_number?: string | null }
@@ -62,6 +62,7 @@ function MpesaCard() {
 }
 
 export default function BizSettings() {
+  const isAdmin = useIsAdmin()
   const { signOut, user } = useAuth()
   const { business, reload } = useAccount()
   const [f, setF] = useState({ name: business?.name ?? '', owner_name: business?.owner_name ?? '', phone: business?.phone ?? '', email: business?.email ?? '', category: business?.category ?? '', location: business?.location ?? '' })
@@ -90,6 +91,7 @@ export default function BizSettings() {
         {msg && <p className={msg.ok ? 'text-sm text-green-700' : 'err'} role="status">{msg.t}</p>}
         <button className="btn-primary w-full">Save</button>
       </form>
+      {isAdmin && <Link to="/admin" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open admin panel</Link>}
       <MpesaCard />
       <section className="card space-y-2 text-sm">
         <h2 className="font-bold">Account</h2>

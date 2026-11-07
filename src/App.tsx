@@ -23,6 +23,7 @@ import Alerts from './pages/Alerts'
 import Bills from './pages/Bills'
 import BillDetail from './pages/BillDetail'
 import Claim from './pages/Claim'
+const Admin = lazy(() => import('./pages/Admin'))
 
 // Heavier pages load on demand.
 const Calendar = lazy(() => import('./pages/Calendar'))
@@ -84,6 +85,7 @@ function BusinessApp() {
           <Route path="notifications" element={<Alerts />} />
           <Route path="settings" element={<BizSettings />} />
           <Route path="claim" element={<Claim />} />
+          <Route path="admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
@@ -104,6 +106,7 @@ function CustomerApp() {
             <Route path="bills" element={<Bills />} />
             <Route path="bills/:id" element={<BillDetail />} />
             <Route path="claim" element={<Claim />} />
+          <Route path="admin" element={<Admin />} />
             <Route path="payments" element={<Payments />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="insights" element={<Insights />} />

@@ -122,3 +122,9 @@ const CLAIM_KEY = 'owewise.claim'
 export function saveClaimToken(t: string) { try { localStorage.setItem(CLAIM_KEY, t) } catch { /* ignore */ } }
 export function readClaimToken(): string | null { try { return localStorage.getItem(CLAIM_KEY) } catch { return null } }
 export function clearClaimToken() { try { localStorage.removeItem(CLAIM_KEY) } catch { /* ignore */ } }
+
+/** null while loading; true only for platform administrators (checked on the server). */
+export function useIsAdmin(): boolean | null {
+  const { data, loading } = useLoad(async () => (await call<boolean>('is_admin', {})).data === true, [])
+  return loading ? null : data === true
+}

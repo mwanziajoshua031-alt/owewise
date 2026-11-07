@@ -4,11 +4,13 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useStore } from '../lib/store'
 import { download } from '../lib/derive'
+import { useIsAdmin } from '../lib/biz'
 import { Banner, Field, Modal, PageHeader } from '../components/ui'
 
 const CURRENCIES = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS']
 
 export default function Settings() {
+  const isAdmin = useIsAdmin()
   const { user, signOut } = useAuth()
   const { profile, refresh, queue, discardQueued, retryQueue, subscription, isPremium } = useStore()
   const [name, setName] = useState(profile?.full_name ?? '')
@@ -47,6 +49,7 @@ export default function Settings() {
   return (
     <>
       <PageHeader title="Settings" />
+      {isAdmin && <Link to="/admin" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open admin panel</Link>}
       <Link to="/documents" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open my documents (receipts, invoices)</Link>
       <section className="card flex items-center justify-between">
         <div>
