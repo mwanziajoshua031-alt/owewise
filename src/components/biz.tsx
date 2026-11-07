@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { call, useLoad, STATUS_TEXT, type BizPayment, type BizStatus, type DebtMessage, type Dispute, type Receipt } from '../lib/biz'
 import { downloadReceipt } from '../lib/receiptPdf'
@@ -170,5 +171,23 @@ export function InvoiceLink({ path }: { path: string }) {
       }}>View invoice</button>
       {err && <span className="err ml-2">{err}</span>}
     </span>
+  )
+}
+
+/** Small card for the customer home screen: shows only when the customer has bills from businesses. */
+export function BillsCard() {
+  const { data } = useLoad(async () => {
+    const { data } = await supabase.from('business_debt_balances').select('status,outstanding,currency')
+    return (data ?? []) as { status: BizStatus; outstanding: number; currency: string }[]
+  }, [])
+  const live = (data ?? []).filter((d) => d.status !== 'cancelled' && d.status !== 'paid')
+  if (!live.length) return null
+  const review = live.filter((d) => d.status === 'awaiting_review').length
+  const overdue = live.filter((d) => d.status === 'overdue').length
+  return (
+    <Link to="/bills" className="card block border-l-4 border-l-brand-500">
+      <p className="font-bold">Bills from businesses</p>
+      <p className="text-sm text-slate-600 dark:text-slate-300">{live.length} open{review ? ` · ${review} need your review` : ''}{overdue ? ` · ${overdue} overdue` : ''}</p>
+    </Link>
   )
 }

@@ -5,6 +5,7 @@ import { useStore } from '../lib/store'
 import { useUI } from '../components/Layout'
 import { currenciesOf, daysUntil, dueLabel, isActive, paidInMonth, totalsFor } from '../lib/derive'
 import { formatMoney, todayNairobi } from '../lib/money'
+import { BillsCard } from '../components/biz'
 import { Empty, ErrorBox, PageHeader, Spinner, StatusBadge } from '../components/ui'
 
 export default function Dashboard() {
@@ -22,6 +23,7 @@ export default function Dashboard() {
     return (
       <>
         <PageHeader title={name ? `Hi, ${name}` : 'Welcome'} />
+        <BillsCard />
         <Empty
           title="No debts yet"
           hint="Add what you owe and OweWise will track balances, due dates and payments for you."
@@ -53,6 +55,7 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader title={name ? `Hi, ${name}` : 'Overview'} />
+      <BillsCard />
 
       {currencies.length > 1 && (
         <div className="flex gap-2" role="tablist" aria-label="Currency">

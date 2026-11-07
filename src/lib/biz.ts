@@ -76,6 +76,7 @@ const ERRORS: Record<string, string> = {
   invalid_shortcode: 'Enter the Paybill or Till number (5 to 8 digits).',
   invalid_credentials: 'Fill in the consumer key, consumer secret and passkey.',
   save_failed: 'Could not save. Please try again.',
+  business_has_open_debts: 'You still have unpaid debts or payments in progress. Collect, cancel or resolve them first, then close your account.',
   not_found: 'That record was not found.',
 }
 export function friendly(message: string | undefined | null): string {

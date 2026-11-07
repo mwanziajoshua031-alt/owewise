@@ -2,10 +2,10 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
+import { download } from '../../lib/derive'
 import { useAccount } from '../../lib/account'
-import { CONTACT_EMAIL } from '../../lib/legal'
 import { call, friendly, useIsAdmin, useLoad } from '../../lib/biz'
-import { Banner, Field, PageHeader } from '../../components/ui'
+import { Banner, Field, Modal, PageHeader } from '../../components/ui'
 
 type MStatus = { configured: boolean; enabled?: boolean; environment?: string; account_type?: string; shortcode?: string; till_number?: string | null }
 
@@ -61,6 +61,33 @@ function MpesaCard() {
   )
 }
 
+function CloseAccount() {
+  const { signOut } = useAuth()
+  const [open, setOpen] = useState(false)
+  const [word, setWord] = useState('')
+  const [err, setErr] = useState('')
+  return (
+    <>
+      <button className="w-full text-center text-xs text-red-600 underline" onClick={() => setOpen(true)}>Close my business account</button>
+      {open && (
+        <Modal title="Close business account" onClose={() => setOpen(false)}>
+          <div className="space-y-3 text-sm">
+            <p>This removes your login, business profile, contact details and M-Pesa credentials. You can only do it when no debts are unpaid and no payment is in progress.</p>
+            <p className="text-slate-500">Debt and payment records are kept without your name, because your customers and the tax and audit rules need them to stay accurate. Download your data first if you want a copy.</p>
+            <input className="input" aria-label="Type CLOSE to confirm" placeholder="Type CLOSE to confirm" value={word} onChange={(e) => setWord(e.target.value)} />
+            {err && <p className="err" role="alert">{err}</p>}
+            <button className="btn-danger w-full" disabled={word !== 'CLOSE'} onClick={async () => {
+              const r = await call('delete_my_account', {})
+              if (r.error) return setErr(r.error)
+              await signOut()
+            }}>Close account permanently</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
+}
+
 export default function BizSettings() {
   const isAdmin = useIsAdmin()
   const { signOut, user } = useAuth()
@@ -96,8 +123,12 @@ export default function BizSettings() {
       <section className="card space-y-2 text-sm">
         <h2 className="font-bold">Account</h2>
         <p className="text-slate-500">Signed in as {user?.email}</p>
-        <p className="text-slate-500">Because debt and payment records must be kept accurate for both sides, business accounts with records cannot be deleted in the app. To close your account or ask for your data, email <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+        <button className="btn-secondary w-full" onClick={async () => {
+          const { data, error } = await supabase.rpc('export_my_data')
+          if (!error) download('owewise-business-data.json', JSON.stringify(data, null, 2), 'application/json')
+        }}>Download all my data (JSON)</button>
         <button className="btn-secondary w-full" onClick={() => signOut()}>Sign out</button>
+        <CloseAccount />
         <p className="text-xs text-slate-500"><Link className="underline" to="/privacy">Privacy</Link> · <Link className="underline" to="/terms">Terms</Link></p>
       </section>
     </>

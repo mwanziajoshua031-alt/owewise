@@ -60,3 +60,10 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - Claim link format: /claim#<token> (token in URL fragment; stored hash only in DB; single use; 30 days).
 - Untested: anything that talks to Safaricom. To test: create a Daraja sandbox app, then in a business account Settings > M-Pesa payments, enter sandbox credentials (Paybill 174379 + the public sandbox passkey), then pay from a customer account with a sandbox test number.
 - Owner TODOs: enable Leaked Password Protection (Supabase Auth); decide Daraja vs aggregator for real businesses; lawyer review of Privacy/Terms; ODPC registration; OPERATOR_NAME; Paystack for business plans; SMTP/Resend.
+
+## 2026-11-07 Phase 5 (done)
+- Business account closing: Settings > Close my business account (blocked while debts are unpaid or payments pending; record is anonymised, login removed). `delete_my_account` handles customers and businesses.
+- `export_my_data` now includes business-side records (no claim-token hashes). Business Settings has a Download button.
+- Daily in-app reminders for business debts: `generate_business_notifications()` (pg_cron 02:05 UTC = 05:05 Nairobi). Customers get due-soon, overdue (weekly) and please-review nudges; businesses get a weekly overdue summary.
+- Customer home shows a Bills card when they have open bills.
+- Still deferred: subscriptions/Paystack, email + SMS delivery (needs Resend/SMS provider keys).
