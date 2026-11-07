@@ -69,6 +69,13 @@ const ERRORS: Record<string, string> = {
   confirm_first: 'Please confirm the debt before paying.',
   mpesa_kes_only: 'M-Pesa payments are for KES debts only.',
   mpesa_whole_amount: 'M-Pesa needs a whole-shilling amount (no cents).',
+  mpesa_not_configured: 'This business has not set up M-Pesa payments yet. Please pay them directly and ask them to record it.',
+  mpesa_rejected: 'M-Pesa did not accept the request. Check the number and try again.',
+  mpesa_unavailable: 'M-Pesa could not be reached just now. Please try again in a moment.',
+  mpesa_credentials_rejected: 'Safaricom rejected these credentials. Check the consumer key and secret, and the environment.',
+  invalid_shortcode: 'Enter the Paybill or Till number (5 to 8 digits).',
+  invalid_credentials: 'Fill in the consumer key, consumer secret and passkey.',
+  save_failed: 'Could not save. Please try again.',
   not_found: 'That record was not found.',
 }
 export function friendly(message: string | undefined | null): string {

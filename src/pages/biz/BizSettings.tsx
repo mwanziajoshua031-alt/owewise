@@ -4,7 +4,62 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
 import { useAccount } from '../../lib/account'
 import { CONTACT_EMAIL } from '../../lib/legal'
-import { Field, PageHeader } from '../../components/ui'
+import { call, friendly, useLoad } from '../../lib/biz'
+import { Banner, Field, PageHeader } from '../../components/ui'
+
+type MStatus = { configured: boolean; enabled?: boolean; environment?: string; account_type?: string; shortcode?: string; till_number?: string | null }
+
+function MpesaCard() {
+  const { data: st, reload } = useLoad(async () => (await call<MStatus>('my_mpesa_status', {})).data ?? { configured: false }, [])
+  const [f, setF] = useState({ environment: 'sandbox', account_type: 'paybill', shortcode: '', till_number: '', key: '', secret: '', passkey: '' })
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }))
+  async function save(e: FormEvent) {
+    e.preventDefault(); setMsg(null); setBusy(true)
+    const { data, error } = await supabase.functions.invoke('mpesa-settings', { body: f })
+    setBusy(false)
+    if (error) {
+      let body = ''
+      try { body = JSON.stringify(await (error as { context?: Response }).context?.json()) } catch { /* ignore */ }
+      return setMsg({ ok: false, t: body ? friendly(body) : 'Could not reach the server. Please try again.' })
+    }
+    if (!(data as { ok?: boolean })?.ok) return setMsg({ ok: false, t: 'Could not save. Please try again.' })
+    setF({ ...f, key: '', secret: '', passkey: '' }); setOpen(false); setMsg({ ok: true, t: 'Saved. Credentials were verified with Safaricom and stored encrypted.' }); reload()
+  }
+  return (
+    <section className="card space-y-3">
+      <h2 className="font-bold">M-Pesa payments</h2>
+      <p className="text-sm text-slate-600 dark:text-slate-300">Customers pay straight into <b>your</b> Paybill or Till through an M-Pesa prompt on their phone. OweWise never holds the money. You need your own Safaricom Daraja app credentials (from developer.safaricom.co.ke).</p>
+      {st?.configured ? (
+        <div className="rounded-xl bg-slate-50 p-3 text-sm dark:bg-white/5">
+          <p><b>{st.account_type === 'till' ? 'Till' : 'Paybill'} {st.shortcode}</b> · {st.environment === 'sandbox' ? 'Sandbox (test money only)' : 'Live'} · {st.enabled ? 'On' : 'Off'}</p>
+          <div className="mt-2 flex gap-3 text-xs font-semibold">
+            <button className="underline" onClick={async () => { await call('set_mpesa_enabled', { p_enabled: !st.enabled }); reload() }}>{st.enabled ? 'Turn off' : 'Turn on'}</button>
+            <button className="underline" onClick={() => setOpen(!open)}>Replace credentials</button>
+          </div>
+        </div>
+      ) : <Banner>Not set up yet. Until you add credentials, customers cannot pay you by M-Pesa in the app (you can still record cash payments).</Banner>}
+      {(open || !st?.configured) && (
+        <form onSubmit={save} className="space-y-3" autoComplete="off">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Environment"><select className="input" value={f.environment} onChange={(e) => set('environment', e.target.value)}><option value="sandbox">Sandbox (testing)</option><option value="production">Production (real money)</option></select></Field>
+            <Field label="Account type"><select className="input" value={f.account_type} onChange={(e) => set('account_type', e.target.value)}><option value="paybill">Paybill</option><option value="till">Till (Buy Goods)</option></select></Field>
+          </div>
+          <Field label={f.account_type === 'till' ? 'Store / head-office number' : 'Paybill number'}><input className="input" inputMode="numeric" value={f.shortcode} onChange={(e) => set('shortcode', e.target.value)} /></Field>
+          {f.account_type === 'till' && <Field label="Till number (if different)"><input className="input" inputMode="numeric" value={f.till_number} onChange={(e) => set('till_number', e.target.value)} /></Field>}
+          <Field label="Consumer key"><input className="input" type="password" autoComplete="off" value={f.key} onChange={(e) => set('key', e.target.value)} /></Field>
+          <Field label="Consumer secret"><input className="input" type="password" autoComplete="off" value={f.secret} onChange={(e) => set('secret', e.target.value)} /></Field>
+          <Field label="Passkey"><input className="input" type="password" autoComplete="off" value={f.passkey} onChange={(e) => set('passkey', e.target.value)} /></Field>
+          <p className="text-xs text-slate-500">These are checked with Safaricom, then encrypted on the server. They are never shown again.</p>
+          <button className="btn-primary w-full" disabled={busy}>{busy ? 'Checking with Safaricom…' : 'Verify and save'}</button>
+        </form>
+      )}
+      {msg && <p className={msg.ok ? 'text-sm text-green-700 dark:text-green-400' : 'err'} role="status">{msg.t}</p>}
+    </section>
+  )
+}
 
 export default function BizSettings() {
   const { signOut, user } = useAuth()
@@ -35,6 +90,7 @@ export default function BizSettings() {
         {msg && <p className={msg.ok ? 'text-sm text-green-700' : 'err'} role="status">{msg.t}</p>}
         <button className="btn-primary w-full">Save</button>
       </form>
+      <MpesaCard />
       <section className="card space-y-2 text-sm">
         <h2 className="font-bold">Account</h2>
         <p className="text-slate-500">Signed in as {user?.email}</p>

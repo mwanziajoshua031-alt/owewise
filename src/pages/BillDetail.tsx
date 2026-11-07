@@ -90,6 +90,8 @@ function PaySection({ d, onChanged }: { d: BizDebt; onChanged: () => void }) {
     let tries = 0
     timer.current = window.setInterval(async () => {
       tries++
+      // From the 4th check on, also ask the server to confirm with Safaricom directly in case its callback was lost.
+      if (tries >= 4 && tries % 2 === 0) await supabase.functions.invoke('mpesa-status', { body: { payment_id: paymentId } }).catch(() => null)
       const { data } = await supabase.from('business_payments').select('status,result_desc,needs_review').eq('id', paymentId).maybeSingle()
       if (data && data.status !== 'pending') {
         if (timer.current) window.clearInterval(timer.current)
