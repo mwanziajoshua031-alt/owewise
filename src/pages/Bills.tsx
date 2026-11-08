@@ -4,10 +4,12 @@ import { supabase } from '../lib/supabase'
 import { DEBT_COLS, useLoad, type BizDebt } from '../lib/biz'
 import { formatMoney } from '../lib/money'
 import { BizBadge } from '../components/biz'
+import { NewBadge, useUnread } from '../lib/unread'
 import { Empty, ErrorBox, fmtDate, PageHeader, Spinner } from '../components/ui'
 
 export default function Bills() {
   const [tab, setTab] = useState<'open' | 'paid'>('open')
+  const { counts } = useUnread()
   const { data, loading, error, reload } = useLoad(async () => {
     const [d, b] = await Promise.all([
       supabase.from('business_debt_balances').select(DEBT_COLS).order('due_date').limit(300),
@@ -33,7 +35,7 @@ export default function Bills() {
         <ul className="space-y-2">
           {rows.map((d) => (
             <li key={d.id}><Link to={`/bills/${d.id}`} className="card flex items-center justify-between gap-2">
-              <span className="min-w-0"><span className="block truncate font-semibold">{data.names[d.business_id] ?? 'Business'}</span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
+              <span className="min-w-0"><span className="block truncate font-semibold">{data.names[d.business_id] ?? 'Business'}<NewBadge n={counts[d.id]} /></span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
               <span className="shrink-0 text-right"><span className="block text-sm font-bold">{formatMoney(d.outstanding, d.currency)}</span><BizBadge status={d.status} as="customer" /></span>
             </Link></li>
           ))}

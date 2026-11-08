@@ -4,6 +4,7 @@ import { Home, ListChecks, Wallet, CalendarDays, BarChart3, Settings, Plus, Bell
 import { useStore } from '../lib/store'
 import { AddDebtModal, AddPaymentModal } from './forms'
 import { Banner } from './ui'
+import { useUnread } from '../lib/unread'
 
 type UI = { addDebt: (creditorId?: string) => void; addPayment: (debtId?: string) => void }
 const UICtx = createContext<UI>({ addDebt: () => {}, addPayment: () => {} })
@@ -24,6 +25,7 @@ export default function Layout() {
   const [debtModal, setDebtModal] = useState<{ creditorId?: string } | null>(null)
   const [payModal, setPayModal] = useState<{ debtId?: string } | null>(null)
   const unread = notifications.filter((n) => !n.read_at).length
+  const { total: unreadMsgs } = useUnread()
   const failed = queue.filter((q) => q.error).length
 
   // Theme: follow the saved profile choice, else the system.
@@ -49,7 +51,7 @@ export default function Layout() {
           </div>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'bg-brand-600/10 text-brand-700 dark:text-brand-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'}`}>
-              <n.icon className="h-5 w-5" /> {n.label}
+              <n.icon className="h-5 w-5" /> {n.label}{n.to === '/bills' && unreadMsgs > 0 ? <span className="ml-auto rounded-full bg-red-500 px-1.5 text-xs text-white">{unreadMsgs}</span> : null}
             </NavLink>
           ))}
           <button className="btn-primary mt-4" onClick={() => setDebtModal({})}><Plus className="h-4 w-4" /> Add debt</button>
@@ -99,7 +101,7 @@ export default function Layout() {
           {NAV.map((n) => (
             <li key={n.to}>
               <NavLink to={n.to} end={n.end} className={({ isActive }) => `flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                <n.icon className="h-5 w-5" /> {n.label}
+                <span className="relative"><n.icon className="h-5 w-5" />{n.to === '/bills' && unreadMsgs > 0 ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}</span> {n.label}
               </NavLink>
             </li>
           ))}

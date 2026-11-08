@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLoad } from '../lib/biz'
+import { EnableAlerts } from '../lib/unread'
 import { Empty, ErrorBox, fmtDate, PageHeader, Spinner } from '../components/ui'
 
 type N = { id: string; title: string; body: string | null; read_at: string | null; created_at: string; business_debt_id: string | null }
@@ -18,6 +19,7 @@ export default function Alerts() {
   return (
     <>
       <PageHeader title="Alerts" right={unread > 0 && <button className="text-sm font-semibold underline" onClick={async () => { await supabase.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null); reload() }}>Mark all read</button>} />
+      <EnableAlerts />
       {data.length === 0 ? <Empty title="No alerts" hint="Payments, disputes and customer messages show up here." /> : (
         <ul className="space-y-2">
           {data.map((n) => (

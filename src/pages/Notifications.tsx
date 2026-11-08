@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useStore } from '../lib/store'
+import { EnableAlerts } from '../lib/unread'
 import { Empty, PageHeader, Spinner, fmtDate } from '../components/ui'
 
 export default function Notifications() {
@@ -20,6 +21,7 @@ export default function Notifications() {
   return (
     <>
       <PageHeader title="Alerts" right={unread.length > 0 && <button className="text-sm font-semibold underline" onClick={markAll}>Mark all read</button>} />
+      <EnableAlerts />
       {notifications.length === 0 ? (
         <Empty title="No alerts" hint="You will see reminders and overdue notices here." />
       ) : (

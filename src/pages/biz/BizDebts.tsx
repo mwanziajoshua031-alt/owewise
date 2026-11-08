@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { loadDebts, useLoad, type BizStatus } from '../../lib/biz'
 import { formatMoney } from '../../lib/money'
 import { BizBadge } from '../../components/biz'
+import { NewBadge, useUnread } from '../../lib/unread'
 import { Empty, ErrorBox, fmtDate, PageHeader, Spinner } from '../../components/ui'
 
 const FILTERS: { k: 'all' | BizStatus; l: string }[] = [
@@ -14,6 +15,7 @@ export default function BizDebts() {
   const { data, loading, error, reload } = useLoad(loadDebts, [])
   const [f, setF] = useState<'all' | BizStatus>('all')
   const [q, setQ] = useState('')
+  const { counts } = useUnread()
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
   const rows = data.filter((d) => (f === 'all' || d.status === f) && (!q || (d.customer_name + d.description + d.customer_phone).toLowerCase().includes(q.toLowerCase())))
@@ -28,7 +30,7 @@ export default function BizDebts() {
         <ul className="space-y-2">
           {rows.map((d) => (
             <li key={d.id}><Link to={`/debts/${d.id}`} className="card flex items-center justify-between gap-2">
-              <span className="min-w-0"><span className="block truncate font-semibold">{d.customer_name}</span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
+              <span className="min-w-0"><span className="block truncate font-semibold">{d.customer_name}<NewBadge n={counts[d.id]} /></span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
               <span className="shrink-0 text-right"><span className="block text-sm font-bold">{formatMoney(d.outstanding, d.currency)}</span><BizBadge status={d.status} as="business" /></span>
             </Link></li>
           ))}

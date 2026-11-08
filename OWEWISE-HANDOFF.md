@@ -67,3 +67,9 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - Daily in-app reminders for business debts: `generate_business_notifications()` (pg_cron 02:05 UTC = 05:05 Nairobi). Customers get due-soon, overdue (weekly) and please-review nudges; businesses get a weekly overdue summary.
 - Customer home shows a Bills card when they have open bills.
 - Still deferred: subscriptions/Paystack, email + SMS delivery (needs Resend/SMS provider keys).
+
+## 2026-11-08 Message alerts (built, waiting for Netlify deploy credits ~23 Nov)
+- DB: `debt_reads` + RPCs `mark_debt_read(debt)` and `unread_counts()` (messages and disputes from the other side that you have not opened). Opening a debt's thread marks it read and clears its message notifications.
+- App: `src/lib/unread.tsx` polls every 30s and on return to foreground. Red "N new" badges on business Debts/Home and customer Bills, red dots on nav, summary banner on business Home, app-icon badge where supported, and a browser/phone notification if the user allows it (only while the app is open or backgrounded).
+- NOT built: delivery when the app is fully closed (needs email via Resend, SMS provider, or Web Push).
+- Deploy: main contains Phase 5 + message alerts; CI deploy step fails with Netlify "Forbidden" (credits). Re-run the failed GitHub Actions run after credits return.

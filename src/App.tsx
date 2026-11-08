@@ -23,6 +23,7 @@ import Alerts from './pages/Alerts'
 import Bills from './pages/Bills'
 import BillDetail from './pages/BillDetail'
 import Claim from './pages/Claim'
+import { UnreadProvider } from './lib/unread'
 const Admin = lazy(() => import('./pages/Admin'))
 
 // Heavier pages load on demand.
@@ -125,7 +126,7 @@ function CustomerApp() {
 
 function RoleSwitch() {
   const { type } = useAccount()
-  return type === 'business' ? <BusinessApp /> : <CustomerApp />
+  return <UnreadProvider>{type === 'business' ? <BusinessApp /> : <CustomerApp />}</UnreadProvider>
 }
 
 function Gate() {

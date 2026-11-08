@@ -3,6 +3,7 @@ import { useAccount } from '../../lib/account'
 import { loadDebts, useLoad, type BizDebt } from '../../lib/biz'
 import { formatMoney } from '../../lib/money'
 import { BizBadge } from '../../components/biz'
+import { NewBadge, useUnread } from '../../lib/unread'
 import { Empty, ErrorBox, fmtDate, Spinner } from '../../components/ui'
 
 function totals(rows: BizDebt[], pick: (d: BizDebt) => number) {
@@ -18,6 +19,7 @@ function Money({ t }: { t: Record<string, number> }) {
 
 export default function BizHome() {
   const { business } = useAccount()
+  const { counts, total } = useUnread()
   const { data, loading, error, reload } = useLoad(loadDebts, [])
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
@@ -29,6 +31,7 @@ export default function BizHome() {
   return (
     <>
       <h1 className="text-xl font-bold">Hello, {business?.name}</h1>
+      {total > 0 && <Link to="/debts" className="card block border-l-4 border-l-red-500 text-sm font-semibold">You have {total} new message{total === 1 ? '' : 's'} from customers</Link>}
       <div className="grid grid-cols-2 gap-3">
         <div className="card"><p className="text-xs text-slate-500">Owed to you</p><p className="text-lg font-extrabold"><Money t={totals(open, (d) => d.outstanding)} /></p></div>
         <div className="card"><p className="text-xs text-slate-500">Collected so far</p><p className="text-lg font-extrabold text-brand-700 dark:text-brand-400"><Money t={totals(collected, (d) => d.paid_total)} /></p></div>
@@ -43,7 +46,7 @@ export default function BizHome() {
         <ul className="space-y-2">
           {data.slice(0, 6).map((d) => (
             <li key={d.id}><Link to={`/debts/${d.id}`} className="card flex items-center justify-between gap-2">
-              <span className="min-w-0"><span className="block truncate font-semibold">{d.customer_name}</span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
+              <span className="min-w-0"><span className="block truncate font-semibold">{d.customer_name}<NewBadge n={counts[d.id]} /></span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
               <span className="shrink-0 text-right"><span className="block text-sm font-bold">{formatMoney(d.outstanding, d.currency)}</span><BizBadge status={d.status} as="business" /></span>
             </Link></li>
           ))}

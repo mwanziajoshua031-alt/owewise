@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { call, useLoad, STATUS_TEXT, type BizPayment, type BizStatus, type DebtMessage, type Dispute, type Receipt } from '../lib/biz'
 import { downloadReceipt } from '../lib/receiptPdf'
+import { useUnread } from '../lib/unread'
 import { formatMoney } from '../lib/money'
 import { ErrorBox, fmtDate, Spinner } from './ui'
 
@@ -74,6 +75,14 @@ export function Thread({ debtId, role, locked, refreshKey, onChanged }: { debtId
     ])
     return { messages: (m.data ?? []) as DebtMessage[], disputes: (d.data ?? []) as Dispute[] }
   }, [debtId, refreshKey])
+
+  const { refresh: refreshUnread } = useUnread()
+  const seen = (data?.messages.length ?? 0) + (data?.disputes.length ?? 0)
+  useEffect(() => {
+    if (!data) return
+    supabase.rpc('mark_debt_read', { p_debt: debtId }).then(() => refreshUnread())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debtId, seen])
 
   async function send(e: FormEvent) {
     e.preventDefault()

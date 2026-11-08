@@ -5,6 +5,7 @@ import { useAccount } from '../../lib/account'
 import { supabase } from '../../lib/supabase'
 import { useLoad } from '../../lib/biz'
 import { Banner } from '../../components/ui'
+import { useUnread } from '../../lib/unread'
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -16,6 +17,7 @@ const NAV = [
 
 export default function BizLayout() {
   const { business } = useAccount()
+  const { total: unreadMsgs } = useUnread()
   const { data: unread } = useLoad(async () => {
     const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null)
     return count ?? 0
@@ -29,7 +31,7 @@ export default function BizLayout() {
           <p className="mb-2 truncate text-xs font-semibold text-slate-500">{business?.name}</p>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'bg-brand-600/10 text-brand-700 dark:text-brand-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'}`}>
-              <n.icon className="h-5 w-5" /> {n.label}{n.to === '/notifications' && unread ? <span className="ml-auto rounded-full bg-red-500 px-1.5 text-xs text-white">{unread}</span> : null}
+              <n.icon className="h-5 w-5" /> {n.label}{n.to === '/notifications' && unread ? <span className="ml-auto rounded-full bg-red-500 px-1.5 text-xs text-white">{unread}</span> : null}{n.to === '/debts' && unreadMsgs > 0 ? <span className="ml-auto rounded-full bg-red-500 px-1.5 text-xs text-white">{unreadMsgs}</span> : null}
             </NavLink>
           ))}
           <Link to="/new" className="btn-primary mt-4"><Plus className="h-4 w-4" /> Send debt request</Link>
@@ -53,7 +55,7 @@ export default function BizLayout() {
             <li>
               <NavLink to={n.to} end={n.end} className={({ isActive }) => `relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 <n.icon className="h-5 w-5" /> {n.label}
-                {n.to === '/notifications' && unread ? <span className="absolute right-3 top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
+                {((n.to === '/notifications' && unread) || (n.to === '/debts' && unreadMsgs > 0)) ? <span className="absolute right-3 top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
               </NavLink>
             </li>
             </Fragment>
