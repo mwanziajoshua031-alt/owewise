@@ -8,9 +8,9 @@ export type BizDebt = {
   customer_name: string; customer_phone: string; amount: number; currency: string; description: string
   incurred_on: string; due_date: string; invoice_path: string | null; sent_at: string
   claimed_at: string | null; customer_confirmed_at: string | null; cancelled_at: string | null; cancel_reason: string | null
-  created_at: string; paid_total: number; pending_total: number; outstanding: number; status: BizStatus
+  created_at: string; source: 'request' | 'quick'; paid_total: number; pending_total: number; outstanding: number; status: BizStatus
 }
-export const DEBT_COLS = 'id,business_id,business_customer_id,customer_user_id,customer_name,customer_phone,amount,currency,description,incurred_on,due_date,invoice_path,sent_at,claimed_at,customer_confirmed_at,cancelled_at,cancel_reason,created_at,paid_total,pending_total,outstanding,status'
+export const DEBT_COLS = 'id,business_id,business_customer_id,customer_user_id,customer_name,customer_phone,amount,currency,description,incurred_on,due_date,invoice_path,sent_at,claimed_at,customer_confirmed_at,cancelled_at,cancel_reason,created_at,source,paid_total,pending_total,outstanding,status'
 
 export type BizPayment = {
   id: string; debt_id: string; kind: 'payment' | 'reversal'; reverses_payment_id: string | null; amount: number; currency: string
@@ -77,6 +77,9 @@ const ERRORS: Record<string, string> = {
   invalid_credentials: 'Fill in the consumer key, consumer secret and passkey.',
   save_failed: 'Could not save. Please try again.',
   business_has_open_debts: 'You still have unpaid debts or payments in progress. Collect, cancel or resolve them first, then close your account.',
+  credit_limit_exceeded: 'This would take the customer over their credit limit. Raise the limit on the Customers page or ask for a payment first.',
+  customer_linked_use_request: 'This customer already uses OweWise. Send them a normal debt request so they can confirm it.',
+  invalid_description: 'Describe what this is for.',
   not_found: 'That record was not found.',
 }
 export function friendly(message: string | undefined | null): string {
@@ -128,4 +131,14 @@ export function clearClaimToken() { try { localStorage.removeItem(CLAIM_KEY) } c
 export function useIsAdmin(): boolean | null {
   const { data, loading } = useLoad(async () => (await call<boolean>('is_admin', {})).data === true, [])
   return loading ? null : data === true
+}
+
+export function waLink(phone: string, text: string): string {
+  const d = phone.replace(/\D/g, '').replace(/^0/, '254')
+  return `https://wa.me/${d}?text=${encodeURIComponent(text)}`
+}
+
+export function reminderText(d: Pick<BizDebt, 'customer_name' | 'description' | 'currency' | 'outstanding' | 'due_date' | 'id' | 'customer_user_id'>, business: string, money: string, due: string, overdue: boolean): string {
+  const link = d.customer_user_id ? ` You can see it and pay in OweWise: ${window.location.origin}/bills/${d.id}` : ''
+  return `Hello ${d.customer_name}, a friendly reminder from ${business}: ${money} for "${d.description}" ${overdue ? 'was due on' : 'is due on'} ${due}.${link} Thank you.`
 }

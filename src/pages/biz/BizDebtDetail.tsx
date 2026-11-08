@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { call, claimLink, DEBT_COLS, useLoad, type BizDebt, type BizPayment } from '../../lib/biz'
+import { call, claimLink, DEBT_COLS, reminderText, useLoad, waLink, type BizDebt, type BizPayment } from '../../lib/biz'
+import { useAccount } from '../../lib/account'
 import { formatMoney, parseAmountInput } from '../../lib/money'
 import { BizBadge, InvoiceLink, PaymentsList, Thread } from '../../components/biz'
 import { Banner, ErrorBox, Field, fmtDate, Modal, Spinner } from '../../components/ui'
@@ -11,13 +12,15 @@ export default function BizDebtDetail() {
   const [k, setK] = useState(0)
   const [modal, setModal] = useState<null | 'cash' | 'cancel' | 'resolve'>(null)
   const [reverse, setReverse] = useState<BizPayment | null>(null)
+  const { business } = useAccount()
   const [link, setLink] = useState('')
   const [err, setErr] = useState('')
   const { data, loading, error, reload } = useLoad(async () => {
     const d = await supabase.from('business_debt_balances').select(DEBT_COLS).eq('id', id!).maybeSingle()
     if (d.error) throw new Error(d.error.message)
     const x = await supabase.from('disputes').select('id,reason,details').eq('debt_id', id!).eq('status', 'open').maybeSingle()
-    return { debt: d.data as unknown as BizDebt | null, dispute: x.data as { id: string; reason: string; details: string } | null }
+    const rm = await supabase.from('debt_messages').select('created_at').eq('debt_id', id!).eq('kind', 'reminder').order('created_at', { ascending: false }).limit(1)
+    return { debt: d.data as unknown as BizDebt | null, dispute: x.data as { id: string; reason: string; details: string } | null, lastReminder: (rm.data?.[0]?.created_at ?? null) as string | null }
   }, [id, k])
   const done = () => { setModal(null); setReverse(null); setK((n) => n + 1); reload() }
 
@@ -42,6 +45,8 @@ export default function BizDebtDetail() {
           <div className="rounded-xl bg-slate-50 p-2 dark:bg-white/5"><dt className="text-xs text-slate-500">Still owed</dt><dd className="font-bold">{formatMoney(d.outstanding, d.currency)}</dd></div>
         </dl>
         <p className="text-xs text-slate-500">Incurred {fmtDate(d.incurred_on)} · Due {fmtDate(d.due_date)}{d.customer_confirmed_at ? ` · Confirmed ${fmtDate(d.customer_confirmed_at)}` : ' · Not yet confirmed by customer'}</p>
+        {data?.lastReminder && <p className="text-xs text-slate-500">Last reminder sent {fmtDate(data.lastReminder)}</p>}
+        {d.source === 'quick' && !d.claimed_at && <p className="text-xs text-slate-500">Your own record. The customer has not been asked to confirm it. Use “New claim link” to invite them.</p>}
         {d.pending_total > 0 && <Banner>An M-Pesa payment of {formatMoney(d.pending_total, d.currency)} is waiting for the customer to approve on their phone.</Banner>}
         {d.invoice_path && <InvoiceLink path={d.invoice_path} />}
         {d.cancelled_at && <Banner tone="warn">Cancelled {fmtDate(d.cancelled_at)}{d.cancel_reason ? `: ${d.cancel_reason}` : ''}</Banner>}
@@ -58,6 +63,9 @@ export default function BizDebtDetail() {
       {!locked && (
         <div className="grid grid-cols-2 gap-2">
           {d.outstanding > 0 && <button className="btn-primary" onClick={() => setModal('cash')}>Record cash payment</button>}
+          {d.outstanding > 0 && d.status !== 'disputed' && <a className="btn-secondary" target="_blank" rel="noopener noreferrer"
+            href={waLink(d.customer_phone, reminderText(d, business?.name ?? 'us', formatMoney(d.outstanding, d.currency), fmtDate(d.due_date), d.status === 'overdue'))}
+            onClick={() => { call('log_reminder', { p_debt: d.id, p_channel: 'whatsapp' }).then(() => setK((n) => n + 1)) }}>Remind on WhatsApp</a>}
           {!d.claimed_at && <button className="btn-secondary" onClick={async () => {
             setErr('')
             const r = await call<string>('regenerate_claim_link', { p_debt: d.id })

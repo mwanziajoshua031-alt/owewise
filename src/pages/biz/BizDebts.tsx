@@ -21,7 +21,7 @@ export default function BizDebts() {
   const rows = data.filter((d) => (f === 'all' || d.status === f) && (!q || (d.customer_name + d.description + d.customer_phone).toLowerCase().includes(q.toLowerCase())))
   return (
     <>
-      <PageHeader title="Debts" right={<Link to="/new" className="btn-primary">New request</Link>} />
+      <PageHeader title="Debts" right={<span className="flex gap-2"><Link to="/new?mode=quick" className="btn-secondary">Quick record</Link><Link to="/new" className="btn-primary">New request</Link></span>} />
       <input className="input" placeholder="Search customer or description" aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Filter">
         {FILTERS.map((x) => <button key={x.k} role="tab" aria-selected={f === x.k} onClick={() => setF(x.k)} className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${f === x.k ? 'bg-navy-900 text-white dark:bg-brand-600' : 'bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-200'}`}>{x.l}</button>)}

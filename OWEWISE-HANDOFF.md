@@ -73,3 +73,9 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - App: `src/lib/unread.tsx` polls every 30s and on return to foreground. Red "N new" badges on business Debts/Home and customer Bills, red dots on nav, summary banner on business Home, app-icon badge where supported, and a browser/phone notification if the user allows it (only while the app is open or backgrounded).
 - NOT built: delivery when the app is fully closed (needs email via Resend, SMS provider, or Web Push).
 - Deploy: main contains Phase 5 + message alerts; CI deploy step fails with Netlify "Forbidden" (credits). Re-run the failed GitHub Actions run after credits return.
+
+## 2026-11-08 — Counter tools
+- Migration `quick_record_limits_reports`: `create_quick_debt` (owner's own record, no customer confirmation), `set_credit_limit` (enforced in both debt flows), `log_reminder`, `business_report(p_currency)`.
+- UI: Quick record (`/new?mode=quick`), WhatsApp reminders + share balance (wa.me links, no API/keys), customer PDF statement, credit-limit modal, `/reports` (tiles, aging, top debtors, Debts/Payments CSV).
+- Tested: DB logic via rolled-back SQL; UI via mocked-Supabase Playwright. Not tested against real WhatsApp.
+- Deploy blocked until Netlify credits (23rd): then `gh run rerun <id> --repo mwanziajoshua031-alt/owewise`.

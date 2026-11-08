@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAccount } from '../../lib/account'
 import { call, claimLink } from '../../lib/biz'
@@ -12,6 +12,8 @@ const OK_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 export default function NewRequest() {
   const { business } = useAccount()
   const nav = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const quick = params.get('mode') === 'quick'
   const [step, setStep] = useState<'form' | 'review' | 'sent'>('form')
   const [f, setF] = useState({ name: '', phone: '', email: '', amount: '', currency: 'KES', description: '', incurred: todayNairobi(), due: '' })
   const [file, setFile] = useState<File | null>(null)
@@ -32,8 +34,18 @@ export default function NewRequest() {
     if (f.description.trim().length < 2) return setErr('Describe what this debt is for')
     if (!f.due) return setErr('Choose a due date')
     if (f.due < f.incurred) return setErr('The due date cannot be before the date the debt was incurred')
+    if (quick) return void saveQuick()
     if (file && (!OK_TYPES.includes(file.type) || file.size > 5 * 1024 * 1024)) return setErr('Invoice must be a PDF or image under 5 MB')
     setStep('review')
+  }
+
+  async function saveQuick() {
+    if (!amt.ok) return
+    setBusy(true)
+    const r = await call<string>('create_quick_debt', { p_name: f.name, p_phone: f.phone, p_amount: amt.value, p_currency: f.currency, p_description: f.description, p_incurred: f.incurred, p_due: f.due })
+    setBusy(false)
+    if (r.error || !r.data) return setErr(r.error ?? 'Could not save')
+    nav(`/debts/${r.data}`)
   }
 
   async function send() {
@@ -112,11 +124,17 @@ export default function NewRequest() {
 
   return (
     <>
-      <PageHeader title="Send debt request" />
+      <PageHeader title={quick ? 'Quick record' : 'Send debt request'} />
+      <div role="tablist" aria-label="Mode" className="grid grid-cols-2 gap-2">
+        {([[false, 'Debt request'], [true, 'Quick record']] as const).map(([q, l]) => (
+          <button key={l} role="tab" aria-selected={quick === q} onClick={() => setParams(q ? { mode: 'quick' } : {})} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${quick === q ? 'border-brand-500 bg-brand-500/10 text-brand-700' : 'border-slate-300 text-slate-600'}`}>{l}</button>
+        ))}
+      </div>
+      <p className="text-xs text-slate-500">{quick ? 'Your own record, saved straight away at the counter. The customer is not asked to confirm. You can invite them to OweWise later so they can see it and pay by M-Pesa.' : 'The customer reviews and confirms the debt before they can pay. Best for amounts you want agreed in writing.'}</p>
       <form onSubmit={review} noValidate className="card space-y-3">
         <Field label="Customer name"><input className="input" maxLength={120} value={f.name} onChange={(e) => set('name', e.target.value)} /></Field>
         <Field label="Customer phone"><input className="input" inputMode="tel" placeholder="0712 345 678" value={f.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
-        <Field label="Customer email (optional)"><input className="input" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} /></Field>
+        {!quick && <Field label="Customer email (optional)"><input className="input" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} /></Field>}
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2"><Field label="Amount"><input className="input" inputMode="decimal" value={f.amount} onChange={(e) => set('amount', e.target.value)} /></Field></div>
           <Field label="Currency"><select className="input" value={f.currency} onChange={(e) => set('currency', e.target.value)}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
@@ -126,10 +144,10 @@ export default function NewRequest() {
           <Field label="Date incurred"><input className="input" type="date" value={f.incurred} onChange={(e) => set('incurred', e.target.value)} /></Field>
           <Field label="Due date"><input className="input" type="date" value={f.due} onChange={(e) => set('due', e.target.value)} /></Field>
         </div>
-        <Field label="Invoice or proof (optional, PDF or image, max 5 MB)"><input className="input py-2" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>
+        {!quick && <Field label="Invoice or proof (optional, PDF or image, max 5 MB)"><input className="input py-2" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>}
         {f.currency !== 'KES' && <p className="text-xs text-slate-500">M-Pesa payments work for KES only. Other currencies can be settled and recorded manually.</p>}
         {err && <p className="err" role="alert">{err}</p>}
-        <button className="btn-primary w-full">Review request</button>
+        <button className="btn-primary w-full" disabled={busy}>{quick ? (busy ? 'Saving…' : 'Save record') : 'Review request'}</button>
         <Link to="/debts" className="block text-center text-sm text-slate-500 underline">Cancel</Link>
       </form>
     </>

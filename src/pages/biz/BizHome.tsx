@@ -39,6 +39,7 @@ export default function BizHome() {
         <div className="card"><p className="text-xs text-slate-500">Needs attention</p>
           <p className="text-sm">{count('awaiting_review')} awaiting customer · {count('disputed')} disputed</p></div>
       </div>
+      <div className="grid grid-cols-2 gap-2"><Link to="/new?mode=quick" className="btn-secondary">Quick record</Link><Link to="/reports" className="btn-secondary">Reports</Link></div>
       <div className="flex items-center justify-between"><h2 className="font-bold">Recent requests</h2><Link className="text-sm font-semibold underline" to="/debts">See all</Link></div>
       {data.length === 0 ? (
         <Empty title="No debt requests yet" hint="Send your first debt request to a customer. They review it, confirm it, then can pay you by M-Pesa." action={<Link className="btn-primary" to="/new">Send debt request</Link>} />
