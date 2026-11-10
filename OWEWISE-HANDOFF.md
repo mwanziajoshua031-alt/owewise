@@ -1,7 +1,7 @@
 # OweWise: handoff (attach this in a new chat and say "continue building")
 
 ## Goal
-OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add currencies together). Mobile-first PWA. React + TypeScript + Tailwind + Recharts, Supabase. Freemium: Free (5 active debts, 5 creditors, 20 files) / Premium $0.99/mo (KES equivalent, annual discount), M-Pesa + card via Paystack Kenya.
+OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add currencies together). Mobile-first PWA. React + TypeScript + Tailwind + Recharts, Supabase. Freemium: Free (5 active debts, 5 creditors, 20 files) / Premium $1.99/mo (KES equivalent, annual discount), M-Pesa + card via Paystack Kenya.
 
 ## Standing rules from the owner
 - Follow Kenyan law (Data Protection Act 2019) and protect the app from attackers.
@@ -79,3 +79,16 @@ OweWise: consumer debt tracker for Kenya (KES default, multi-currency, never add
 - UI: Quick record (`/new?mode=quick`), WhatsApp reminders + share balance (wa.me links, no API/keys), customer PDF statement, credit-limit modal, `/reports` (tiles, aging, top debtors, Debts/Payments CSV).
 - Tested: DB logic via rolled-back SQL; UI via mocked-Supabase Playwright. Not tested against real WhatsApp.
 - Deploy blocked until Netlify credits (23rd): then `gh run rerun <id> --repo mwanziajoshua031-alt/owewise`.
+
+## 2026-11-10: staff roles (database done), new owl icon, Premium price
+- Owner decisions: Premium is now **$1.99/month** (replaces $0.99); staff is part of Premium. The paywall is NOT enforced yet (subscriptions/Paystack still deferred). Only the price text on the Subscription page was changed in code.
+- Staff roles, database only. Migration file: `supabase/migrations/20261110_staff_roles.sql` (already applied to the live project in four steps; the file is the consolidated final state, do not re-apply). Adds `business_members`, `business_invites`, helpers `can_work_business`, `is_staff_of`, `acting_business_id`, RPCs `invite_staff(email)`, `accept_staff_invite(invite_id)`, `revoke_staff_invite`, `remove_staff`. Invites are by email, expire in 7 days, max 10 staff, rate limited; invite/join/remove are written to `business_audit_logs`.
+- Permission split (owner approved). Staff CAN: view customers/debts/payments/receipts, add customers and debts (quick record + debt request), record manual cash/other payments, log reminders. Owner ONLY: business reports (owner confirmed), M-Pesa settings, business profile, credit limits, cancelling debts, reversing payments, resolving disputes, managing staff. A staff member belongs to one business; a person's own business wins in `acting_business_id()`.
+- Tested in rolled-back SQL transactions as a real staff user and as an unrelated user: staff see the shop's debts and can record a debt, a cash payment (receipt issued) and a reminder; blocked from credit limit, reversal, cancel, invite, reports; a stranger sees nothing. Solo owners unchanged. Not tested through the app UI (there is no staff UI yet).
+- NOT BUILT (do next, in this order):
+  1. Two read RPCs the invite flow needs: one so an invited person can find their pending invite(s) by their signed-in email (today only the owner can read `business_invites`, so the invitee has no way to learn the invite id, and no email is sent because Resend is not set up), and one so the owner can list staff with email (the `business_members` table only has user ids).
+  2. App screens: Settings > Staff (invite by email, pending invites with revoke, staff list with remove), an "accept invite" step after sign-in, and a staff mode that hides owner-only buttons (reports, M-Pesa, credit limits, reversals, cancel, disputes). Check how the app decides business vs customer account at sign-in, since a staff user is not a business owner.
+  3. Optional: staff-created records already store `created_by`; show "added by" in the UI.
+- Icon: the owl logo supplied by the owner (owl only, without the "owewiseReminder" wording) now provides every icon: `public/icons/` (192, 512, maskable 512, apple-touch 180, favicon 32/48), manifest `background_color` set to the logo cream `#FAF6EB`, `theme_color` stays navy. Old `public/icon.svg` removed. The placeholder "O" squares in both layouts and the login page now use `BrandMark` (`src/components/ui.tsx`). The 2000x2000 original is not stored in the repo; ask the owner for it if icons need regenerating.
+- GitHub: in a chat where the repo is not attached, call `add_repo` for `mwanziajoshua031-alt/owewise` (push access), then clone. This worked on 2026-11-10 after earlier sessions could not see the repo.
+- Deploy: pushes to `main` run the CI build and tests; the Netlify deploy step is expected to fail with "Forbidden" until the owner's Netlify credits return (~23 Nov). Then re-run the failed GitHub Actions run to publish the latest version.
