@@ -12,14 +12,13 @@ export default defineConfig({
         short_name: 'OweWise',
         description: 'Track what you owe. Pay it down with a plan.',
         theme_color: '#0B1F3A',
-        background_color: '#0B1F3A',
+        background_color: '#FAF6EB',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
       workbox: {

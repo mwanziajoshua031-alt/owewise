@@ -4,7 +4,7 @@ import { Home, ListChecks, Users, Bell, Settings, Plus } from 'lucide-react'
 import { useAccount } from '../../lib/account'
 import { supabase } from '../../lib/supabase'
 import { useLoad } from '../../lib/biz'
-import { Banner } from '../../components/ui'
+import { Banner, BrandMark } from '../../components/ui'
 import { useUnread } from '../../lib/unread'
 
 const NAV = [
@@ -27,7 +27,7 @@ export default function BizLayout() {
     <>
       <div className="mx-auto flex min-h-full max-w-5xl">
         <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-1 border-r border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-navy-900 md:flex">
-          <div className="mb-4 flex items-center gap-2 text-lg font-extrabold"><span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">O</span> OweWise</div>
+          <div className="mb-4 flex items-center gap-2 text-lg font-extrabold"><BrandMark className="h-8 w-8 rounded-lg" /> OweWise</div>
           <p className="mb-2 truncate text-xs font-semibold text-slate-500">{business?.name}</p>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'bg-brand-600/10 text-brand-700 dark:text-brand-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'}`}>
@@ -38,7 +38,7 @@ export default function BizLayout() {
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-navy-900/90 md:hidden">
-            <span className="flex items-center gap-2 font-extrabold"><span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-sm text-white">O</span> <span className="truncate">{business?.name ?? 'OweWise'}</span></span>
+            <span className="flex items-center gap-2 font-extrabold"><BrandMark className="h-7 w-7 rounded-lg" /> <span className="truncate">{business?.name ?? 'OweWise'}</span></span>
           </header>
           <main className="flex-1 space-y-3 px-4 pb-32 pt-4 md:pb-10">
             {business?.status === 'suspended' && <Banner tone="warn">This business account is suspended. You cannot send new requests. Contact support.</Banner>}

@@ -2,6 +2,10 @@ import { useEffect, type ReactNode } from 'react'
 import { Loader2, X, Inbox, AlertTriangle } from 'lucide-react'
 import { STATUS_LABEL, type DebtStatus } from '../lib/types'
 
+export function BrandMark({ className = 'h-8 w-8 rounded-lg' }: { className?: string }) {
+  return <img src="/icons/icon-192.png" alt="" aria-hidden="true" className={`${className} shrink-0 object-cover`} />
+}
+
 export function Spinner({ label = 'Loading' }: { label?: string }) {
   return (
     <div role="status" className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">

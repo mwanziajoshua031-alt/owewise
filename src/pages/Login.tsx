@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { readClaimToken } from '../lib/biz'
+import { BrandMark } from '../components/ui'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -50,7 +51,7 @@ export default function Login() {
     <div className="grid min-h-full place-items-center bg-navy-900 px-4 pb-28 pt-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center text-white">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-brand-600 text-2xl font-extrabold">O</div>
+          <BrandMark className="mx-auto mb-3 h-16 w-16 rounded-2xl" />
           <h1 className="text-2xl font-extrabold">OweWise</h1>
           <p className="mt-1 text-sm text-slate-300">Know what you owe. Pay it down with a plan.</p>
         </div>

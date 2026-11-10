@@ -3,7 +3,7 @@ import { NavLink, Outlet, Link } from 'react-router-dom'
 import { Home, ListChecks, Wallet, CalendarDays, BarChart3, Settings, Plus, Bell, WifiOff, CloudUpload, Receipt } from 'lucide-react'
 import { useStore } from '../lib/store'
 import { AddDebtModal, AddPaymentModal } from './forms'
-import { Banner } from './ui'
+import { Banner, BrandMark } from './ui'
 import { useUnread } from '../lib/unread'
 
 type UI = { addDebt: (creditorId?: string) => void; addPayment: (debtId?: string) => void }
@@ -47,7 +47,7 @@ export default function Layout() {
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-1 border-r border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-navy-900 md:flex">
           <div className="mb-4 flex items-center gap-2 text-lg font-extrabold text-navy-900 dark:text-white">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">O</span> OweWise
+            <BrandMark className="h-8 w-8 rounded-lg" /> OweWise
           </div>
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'bg-brand-600/10 text-brand-700 dark:text-brand-400' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'}`}>
@@ -60,7 +60,7 @@ export default function Layout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-navy-900/90 md:hidden">
             <span className="flex items-center gap-2 font-extrabold text-navy-900 dark:text-white">
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-sm text-white">O</span> OweWise
+              <BrandMark className="h-7 w-7 rounded-lg" /> OweWise
             </span>
             <Link to="/notifications" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} className="relative rounded-full p-2">
               <Bell className="h-5 w-5" />

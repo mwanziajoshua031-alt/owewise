@@ -48,7 +48,7 @@ export default function Subscription() {
       <section className="card"><h2 className="mb-2 font-bold">Free</h2><Features items={FREE} /></section>
       <section className="card border-brand-500">
         <h2 className="font-bold">Premium</h2>
-        <p className="text-sm text-slate-500">$0.99 per month, charged in Kenyan shillings at the rate shown at checkout. An annual plan is available at a discount.</p>
+        <p className="text-sm text-slate-500">$1.99 per month, charged in Kenyan shillings at the rate shown at checkout. An annual plan is available at a discount.</p>
         <div className="my-3"><Features items={PREMIUM} /></div>
         {!isPremium ? (
           <div className="space-y-3">
