@@ -12,7 +12,8 @@ export default function BizDebtDetail() {
   const [k, setK] = useState(0)
   const [modal, setModal] = useState<null | 'cash' | 'cancel' | 'resolve'>(null)
   const [reverse, setReverse] = useState<BizPayment | null>(null)
-  const { business } = useAccount()
+  const { business, role } = useAccount()
+  const isStaff = role === 'staff'
   const [link, setLink] = useState('')
   const [err, setErr] = useState('')
   const { data, loading, error, reload } = useLoad(async () => {
@@ -46,13 +47,13 @@ export default function BizDebtDetail() {
         </dl>
         <p className="text-xs text-slate-500">Incurred {fmtDate(d.incurred_on)} · Due {fmtDate(d.due_date)}{d.customer_confirmed_at ? ` · Confirmed ${fmtDate(d.customer_confirmed_at)}` : ' · Not yet confirmed by customer'}</p>
         {data?.lastReminder && <p className="text-xs text-slate-500">Last reminder sent {fmtDate(data.lastReminder)}</p>}
-        {d.source === 'quick' && !d.claimed_at && <p className="text-xs text-slate-500">Your own record. The customer has not been asked to confirm it. Use “New claim link” to invite them.</p>}
+        {d.source === 'quick' && !d.claimed_at && !isStaff && <p className="text-xs text-slate-500">Your own record. The customer has not been asked to confirm it. Use “New claim link” to invite them.</p>}
         {d.pending_total > 0 && <Banner>An M-Pesa payment of {formatMoney(d.pending_total, d.currency)} is waiting for the customer to approve on their phone.</Banner>}
-        {d.invoice_path && <InvoiceLink path={d.invoice_path} />}
+        {d.invoice_path && !isStaff && <InvoiceLink path={d.invoice_path} />}
         {d.cancelled_at && <Banner tone="warn">Cancelled {fmtDate(d.cancelled_at)}{d.cancel_reason ? `: ${d.cancel_reason}` : ''}</Banner>}
       </div>
 
-      {data?.dispute && (
+      {!isStaff && data?.dispute && (
         <div className="card space-y-2 border-orange-300">
           <p className="font-bold">Open dispute · {data.dispute.reason.replace(/_/g, ' ')}</p>
           <p className="text-sm">{data.dispute.details}</p>
@@ -66,13 +67,13 @@ export default function BizDebtDetail() {
           {d.outstanding > 0 && d.status !== 'disputed' && <a className="btn-secondary" target="_blank" rel="noopener noreferrer"
             href={waLink(d.customer_phone, reminderText(d, business?.name ?? 'us', formatMoney(d.outstanding, d.currency), fmtDate(d.due_date), d.status === 'overdue'))}
             onClick={() => { call('log_reminder', { p_debt: d.id, p_channel: 'whatsapp' }).then(() => setK((n) => n + 1)) }}>Remind on WhatsApp</a>}
-          {!d.claimed_at && <button className="btn-secondary" onClick={async () => {
+          {!d.claimed_at && !isStaff && <button className="btn-secondary" onClick={async () => {
             setErr('')
             const r = await call<string>('regenerate_claim_link', { p_debt: d.id })
             if (r.error) return setErr(r.error)
             setLink(claimLink(r.data!))
           }}>New claim link</button>}
-          {d.paid_total === 0 && d.pending_total === 0 && <button className="btn-secondary" onClick={() => setModal('cancel')}>Cancel request</button>}
+          {d.paid_total === 0 && d.pending_total === 0 && !isStaff && <button className="btn-secondary" onClick={() => setModal('cancel')}>Cancel request</button>}
         </div>
       )}
       {link && (
@@ -82,9 +83,9 @@ export default function BizDebtDetail() {
       )}
       {err && <p className="err" role="alert">{err}</p>}
 
-      <section className="card"><h2 className="mb-2 font-bold">Payments</h2><PaymentsList debtId={d.id} refreshKey={k} onReverse={setReverse} /></section>
-      <section className="card"><h2 className="mb-2 font-bold">Messages</h2><Thread debtId={d.id} role="business" locked={locked || !d.customer_user_id} refreshKey={k} onChanged={() => setK((n) => n + 1)} />
-        {!d.customer_user_id && <p className="mt-2 text-xs text-slate-500">Messaging opens once the customer links their account.</p>}</section>
+      <section className="card"><h2 className="mb-2 font-bold">Payments</h2><PaymentsList debtId={d.id} refreshKey={k} onReverse={isStaff ? undefined : setReverse} /></section>
+      {!isStaff && <section className="card"><h2 className="mb-2 font-bold">Messages</h2><Thread debtId={d.id} role="business" locked={locked || !d.customer_user_id} refreshKey={k} onChanged={() => setK((n) => n + 1)} />
+        {!d.customer_user_id && <p className="mt-2 text-xs text-slate-500">Messaging opens once the customer links their account.</p>}</section>}
 
       {modal === 'cash' && <CashModal d={d} onClose={() => setModal(null)} onDone={done} />}
       {modal === 'cancel' && <ReasonModal title="Cancel debt request" cta="Cancel request" onClose={() => setModal(null)} run={(r) => call('cancel_debt_request', { p_debt: d.id, p_reason: r })} onDone={done} />}

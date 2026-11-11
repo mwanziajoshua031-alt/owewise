@@ -10,7 +10,7 @@ const CURRENCIES = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS']
 const OK_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
 
 export default function NewRequest() {
-  const { business } = useAccount()
+  const { business, role } = useAccount()
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
   const quick = params.get('mode') === 'quick'
@@ -144,7 +144,7 @@ export default function NewRequest() {
           <Field label="Date incurred"><input className="input" type="date" value={f.incurred} onChange={(e) => set('incurred', e.target.value)} /></Field>
           <Field label="Due date"><input className="input" type="date" value={f.due} onChange={(e) => set('due', e.target.value)} /></Field>
         </div>
-        {!quick && <Field label="Invoice or proof (optional, PDF or image, max 5 MB)"><input className="input py-2" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>}
+        {!quick && role !== 'staff' && <Field label="Invoice or proof (optional, PDF or image, max 5 MB)"><input className="input py-2" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>}
         {f.currency !== 'KES' && <p className="text-xs text-slate-500">M-Pesa payments work for KES only. Other currencies can be settled and recorded manually.</p>}
         {err && <p className="err" role="alert">{err}</p>}
         <button className="btn-primary w-full" disabled={busy}>{quick ? (busy ? 'Saving…' : 'Save record') : 'Review request'}</button>

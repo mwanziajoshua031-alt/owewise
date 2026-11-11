@@ -10,7 +10,8 @@ import { Empty, ErrorBox, fmtDate, Modal, PageHeader, Spinner } from '../../comp
 type Cust = { id: string; name: string; phone: string; customer_user_id: string | null; credit_limit: number | null }
 
 export default function BizCustomers() {
-  const { business } = useAccount()
+  const { business, role } = useAccount()
+  const isStaff = role === 'staff'
   const [limitFor, setLimitFor] = useState<Cust | null>(null)
   const { data, loading, error, reload } = useLoad(async () => {
     const [c, d] = await Promise.all([supabase.from('business_customers').select('id,name,phone,customer_user_id,credit_limit').order('name'), loadDebts()])
@@ -21,7 +22,7 @@ export default function BizCustomers() {
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
   return (
     <>
-      <PageHeader title="Customers" right={<Link to="/reports" className="btn-secondary">Reports</Link>} />
+      <PageHeader title="Customers" right={isStaff ? undefined : <Link to="/reports" className="btn-secondary">Reports</Link>} />
       {data.customers.length === 0 ? <Empty title="No customers yet" hint="Customers are added automatically when you send a debt request or make a quick record." /> : (
         <ul className="space-y-2">
           {data.customers.map((c) => {
@@ -38,7 +39,7 @@ export default function BizCustomers() {
                 </div>
                 {mine.length > 0 && <div className="flex flex-wrap gap-x-3 text-xs">{mine.slice(0, 5).map((d) => <Link key={d.id} className="font-semibold text-brand-700 underline dark:text-brand-400" to={`/debts/${d.id}`}>{d.description.slice(0, 24)}</Link>)}</div>}
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <button className="btn-secondary !min-h-0 px-3 py-1.5" onClick={() => setLimitFor(c)}>Credit limit</button>
+                  {!isStaff && <button className="btn-secondary !min-h-0 px-3 py-1.5" onClick={() => setLimitFor(c)}>Credit limit</button>}
                   {mine.length > 0 && <button className="btn-secondary !min-h-0 px-3 py-1.5" onClick={() => downloadStatement(business?.name ?? 'Business', c.name, c.phone, mine)}>Statement PDF</button>}
                   {open.length > 0 && <a className="btn-secondary !min-h-0 px-3 py-1.5" target="_blank" rel="noopener noreferrer" href={waLink(c.phone, statementText(business?.name ?? 'us', c.name, open))}>Share balance on WhatsApp</a>}
                 </div>

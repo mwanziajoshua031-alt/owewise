@@ -4,6 +4,7 @@ import { Home, ListChecks, Wallet, CalendarDays, BarChart3, Settings, Plus, Bell
 import { useStore } from '../lib/store'
 import { AddDebtModal, AddPaymentModal } from './forms'
 import { Banner, BrandMark } from './ui'
+import { StaffInviteBanner } from './staff'
 import { useUnread } from '../lib/unread'
 
 type UI = { addDebt: (creditorId?: string) => void; addPayment: (debtId?: string) => void }
@@ -83,6 +84,7 @@ export default function Layout() {
                 </span>
               </Banner>
             )}
+            <StaffInviteBanner />
             <Outlet />
           </main>
         </div>

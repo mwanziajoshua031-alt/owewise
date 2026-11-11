@@ -25,6 +25,9 @@ export type Receipt = {
 }
 export type Dispute = { id: string; reason: string; details: string; status: 'open' | 'resolved' | 'withdrawn'; resolution: string | null; resolution_note: string | null; created_at: string }
 export type DebtMessage = { id: string; sender_role: 'customer' | 'business' | 'system'; kind: string; body: string; requested_due_date: string | null; status: 'pending' | 'approved' | 'rejected' | null; created_at: string }
+export type StaffMember = { user_id: string; email: string; joined_at: string }
+export type StaffInvite = { id: string; email: string; expires_at: string }
+export type MyInvite = { id: string; business_name: string; expires_at: string }
 export type Business = { id: string; name: string; owner_name: string | null; phone: string | null; email: string | null; category: string | null; location: string | null; status: 'active' | 'suspended' }
 
 export const STATUS_TEXT: Record<BizStatus, { business: string; customer: string }> = {
@@ -81,6 +84,13 @@ const ERRORS: Record<string, string> = {
   customer_linked_use_request: 'This customer already uses OweWise. Send them a normal debt request so they can confirm it.',
   invalid_description: 'Describe what this is for.',
   not_found: 'That record was not found.',
+  invalid_email: 'Enter a valid email address.',
+  staff_limit_reached: 'You have reached the limit of 10 staff members.',
+  invite_invalid: 'This invitation has expired or is no longer valid. Ask the owner to send a new one.',
+  email_not_confirmed: 'Confirm your email address first (check your inbox), then try again.',
+  already_owner: 'A business owner cannot join another business as staff.',
+  already_staff: 'You already work for a business. Stop working there first to join another.',
+  forbidden: 'You are not allowed to do that.',
 }
 export function friendly(message: string | undefined | null): string {
   if (!message) return 'Something went wrong. Please try again.'

@@ -74,6 +74,8 @@ function ClaimRedirect() {
 }
 
 function BusinessApp() {
+  const { role } = useAccount()
+  const owner = role !== 'staff'
   return (
     <Suspense fallback={<Spinner />}>
       <ClaimRedirect />
@@ -84,11 +86,11 @@ function BusinessApp() {
           <Route path="debts/:id" element={<BizDebtDetail />} />
           <Route path="new" element={<NewRequest />} />
           <Route path="customers" element={<BizCustomers />} />
-          <Route path="reports" element={<BizReports />} />
-          <Route path="notifications" element={<Alerts />} />
+          {owner && <Route path="reports" element={<BizReports />} />}
+          {owner && <Route path="notifications" element={<Alerts />} />}
           <Route path="settings" element={<BizSettings />} />
           <Route path="claim" element={<Claim />} />
-          <Route path="admin" element={<Admin />} />
+          {owner && <Route path="admin" element={<Admin />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

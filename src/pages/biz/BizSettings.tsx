@@ -6,6 +6,7 @@ import { download } from '../../lib/derive'
 import { useAccount } from '../../lib/account'
 import { call, friendly, useIsAdmin, useLoad } from '../../lib/biz'
 import { Banner, Field, Modal, PageHeader } from '../../components/ui'
+import { StaffManager } from '../../components/staff'
 
 type MStatus = { configured: boolean; enabled?: boolean; environment?: string; account_type?: string; shortcode?: string; till_number?: string | null }
 
@@ -88,7 +89,7 @@ function CloseAccount() {
   )
 }
 
-export default function BizSettings() {
+function OwnerSettings() {
   const isAdmin = useIsAdmin()
   const { signOut, user } = useAuth()
   const { business, reload } = useAccount()
@@ -119,6 +120,7 @@ export default function BizSettings() {
         <button className="btn-primary w-full">Save</button>
       </form>
       {isAdmin && <Link to="/admin" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open admin panel</Link>}
+      <StaffManager />
       <MpesaCard />
       <section className="card space-y-2 text-sm">
         <h2 className="font-bold">Account</h2>
@@ -133,4 +135,45 @@ export default function BizSettings() {
       </section>
     </>
   )
+}
+
+function StaffSettings() {
+  const { signOut, user } = useAuth()
+  const { business, reload } = useAccount()
+  const [open, setOpen] = useState(false)
+  const [err, setErr] = useState('')
+  return (
+    <>
+      <PageHeader title="Settings" />
+      <section className="card space-y-2 text-sm">
+        <h2 className="font-bold">Your role</h2>
+        <p>You work for <b>{business?.name}</b> as staff. You can add customers and debts, record payments and send reminders. The owner manages reports, M-Pesa, credit limits and the other settings.</p>
+        <p className="text-slate-500">Signed in as {user?.email}</p>
+      </section>
+      <section className="card space-y-2 text-sm">
+        <h2 className="font-bold">Account</h2>
+        <button className="btn-secondary w-full" onClick={() => signOut()}>Sign out</button>
+        <button className="w-full text-center text-xs text-red-600 underline" onClick={() => setOpen(true)}>Stop working for this business</button>
+        <p className="text-xs text-slate-500"><Link className="underline" to="/privacy">Privacy</Link> · <Link className="underline" to="/terms">Terms</Link></p>
+      </section>
+      {open && (
+        <Modal title="Stop working for this business" onClose={() => setOpen(false)}>
+          <div className="space-y-3 text-sm">
+            <p>You will lose access to {business?.name}. What you recorded stays in the business's records. Your own account stays, and you will see your personal tracker again.</p>
+            {err && <p className="err" role="alert">{err}</p>}
+            <button className="btn-danger w-full" onClick={async () => {
+              const r = await call('leave_business', {})
+              if (r.error) return setErr(r.error)
+              reload()
+            }}>Stop working here</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
+}
+
+export default function BizSettings() {
+  const { role } = useAccount()
+  return role === 'staff' ? <StaffSettings /> : <OwnerSettings />
 }
