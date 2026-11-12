@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAccount } from '../../lib/account'
 import { call, claimLink } from '../../lib/biz'
 import { formatMoney, parseAmountInput, todayNairobi } from '../../lib/money'
+import { BranchSelect, useBranches } from '../../components/branches'
 import { Banner, Field, fmtDate, PageHeader } from '../../components/ui'
 
 const CURRENCIES = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS']
@@ -21,6 +22,8 @@ export default function NewRequest() {
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{ token: string | null; linked: boolean; debtId: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [branch, setBranch] = useState('')
+  const { data: branches } = useBranches()
   const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }))
 
   const amt = parseAmountInput(f.amount || '0', f.currency)
@@ -45,6 +48,7 @@ export default function NewRequest() {
     const r = await call<string>('create_quick_debt', { p_name: f.name, p_phone: f.phone, p_amount: amt.value, p_currency: f.currency, p_description: f.description, p_incurred: f.incurred, p_due: f.due })
     setBusy(false)
     if (r.error || !r.data) return setErr(r.error ?? 'Could not save')
+    if (branch) await call('set_debt_branch', { p_debt: r.data, p_branch: branch })
     nav(`/debts/${r.data}`)
   }
 
@@ -68,6 +72,7 @@ export default function NewRequest() {
       setStep('form')
       return setErr(r.error ?? 'Could not send')
     }
+    if (branch) await call('set_debt_branch', { p_debt: r.data.debt_id, p_branch: branch })
     setResult({ token: r.data.claim_token, linked: r.data.linked, debtId: r.data.debt_id })
     setStep('sent')
   }
@@ -144,6 +149,7 @@ export default function NewRequest() {
           <Field label="Date incurred"><input className="input" type="date" value={f.incurred} onChange={(e) => set('incurred', e.target.value)} /></Field>
           <Field label="Due date"><input className="input" type="date" value={f.due} onChange={(e) => set('due', e.target.value)} /></Field>
         </div>
+        <BranchSelect branches={branches ?? []} value={branch} onChange={setBranch} blankLabel={role === 'staff' ? 'My default branch' : 'No branch'} />
         {!quick && role !== 'staff' && <Field label="Invoice or proof (optional, PDF or image, max 5 MB)"><input className="input py-2" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></Field>}
         {f.currency !== 'KES' && <p className="text-xs text-slate-500">M-Pesa payments work for KES only. Other currencies can be settled and recorded manually.</p>}
         {err && <p className="err" role="alert">{err}</p>}

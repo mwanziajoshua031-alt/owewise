@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { call, claimLink, DEBT_COLS, reminderText, useLoad, waLink, type BizDebt, type BizPayment } from '../../lib/biz'
 import { useAccount } from '../../lib/account'
 import { formatMoney, parseAmountInput } from '../../lib/money'
+import { BranchSelect, useBranches } from '../../components/branches'
 import { BizBadge, InvoiceLink, PaymentsList, Thread } from '../../components/biz'
 import { Banner, ErrorBox, Field, fmtDate, Modal, Spinner } from '../../components/ui'
 
@@ -15,6 +16,7 @@ export default function BizDebtDetail() {
   const { business, role } = useAccount()
   const isStaff = role === 'staff'
   const [link, setLink] = useState('')
+  const { data: branches } = useBranches()
   const [err, setErr] = useState('')
   const { data, loading, error, reload } = useLoad(async () => {
     const d = await supabase.from('business_debt_balances').select(DEBT_COLS).eq('id', id!).maybeSingle()
@@ -46,6 +48,7 @@ export default function BizDebtDetail() {
           <div className="rounded-xl bg-slate-50 p-2 dark:bg-white/5"><dt className="text-xs text-slate-500">Still owed</dt><dd className="font-bold">{formatMoney(d.outstanding, d.currency)}</dd></div>
         </dl>
         <p className="text-xs text-slate-500">Incurred {fmtDate(d.incurred_on)} · Due {fmtDate(d.due_date)}{d.customer_confirmed_at ? ` · Confirmed ${fmtDate(d.customer_confirmed_at)}` : ' · Not yet confirmed by customer'}</p>
+        {(branches?.length ?? 0) > 0 && <BranchSelect branches={branches ?? []} value={d.branch_id ?? ''} onChange={async (v) => { setErr(''); const r = await call('set_debt_branch', { p_debt: d.id, p_branch: v || null }); if (r.error) return setErr(r.error); reload() }} />}
         {data?.lastReminder && <p className="text-xs text-slate-500">Last reminder sent {fmtDate(data.lastReminder)}</p>}
         {d.source === 'quick' && !d.claimed_at && !isStaff && <p className="text-xs text-slate-500">Your own record. The customer has not been asked to confirm it. Use “New claim link” to invite them.</p>}
         {d.pending_total > 0 && <Banner>An M-Pesa payment of {formatMoney(d.pending_total, d.currency)} is waiting for the customer to approve on their phone.</Banner>}

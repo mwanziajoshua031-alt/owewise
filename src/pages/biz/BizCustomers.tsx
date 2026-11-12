@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAccount } from '../../lib/account'
-import { call, loadDebts, useLoad, waLink, type BizDebt } from '../../lib/biz'
+import { call, loadDebts, useLoad, waLink, type BizDebt, type Trust } from '../../lib/biz'
+import { overdueNow, TrustBadge, trustLine } from '../../components/trust'
 import { formatMoney, parseAmountInput } from '../../lib/money'
 import { downloadStatement } from '../../lib/statementPdf'
 import { Empty, ErrorBox, fmtDate, Modal, PageHeader, Spinner } from '../../components/ui'
@@ -14,9 +15,11 @@ export default function BizCustomers() {
   const isStaff = role === 'staff'
   const [limitFor, setLimitFor] = useState<Cust | null>(null)
   const { data, loading, error, reload } = useLoad(async () => {
-    const [c, d] = await Promise.all([supabase.from('business_customers').select('id,name,phone,customer_user_id,credit_limit').order('name'), loadDebts()])
+    const [c, d, t] = await Promise.all([supabase.from('business_customers').select('id,name,phone,customer_user_id,credit_limit').order('name'), loadDebts(), call<{ customer_id: string; trust: Trust }[]>('customer_trust_all', {})])
     if (c.error) throw new Error(c.error.message)
-    return { customers: (c.data ?? []) as Cust[], debts: d }
+    const trust: Record<string, Trust> = {}
+    for (const r of t.data ?? []) trust[r.customer_id] = r.trust
+    return { customers: (c.data ?? []) as Cust[], debts: d, trust }
   }, [])
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
@@ -34,7 +37,10 @@ export default function BizCustomers() {
               <li key={c.id} className="card space-y-2">
                 <div className="flex justify-between gap-2">
                   <div><p className="font-semibold">{c.name}</p><p className="text-xs text-slate-500">{c.phone} · {c.customer_user_id ? 'Linked to an OweWise account' : 'Not linked yet'}</p>
-                    <p className="text-xs text-slate-500">Credit limit: {c.credit_limit === null ? 'none' : formatMoney(c.credit_limit, 'KES')}</p></div>
+                    <p className="text-xs text-slate-500">Credit limit: {c.credit_limit === null ? 'none' : formatMoney(c.credit_limit, 'KES')}</p>
+                    <p className="mt-1"><TrustBadge t={data.trust[c.id]} /></p>
+                    <p className="text-xs text-slate-500">{trustLine(data.trust[c.id])}</p>
+                    {overdueNow(data.trust[c.id]) && <p className="text-xs font-semibold text-red-600">{overdueNow(data.trust[c.id])}</p>}</div>
                   <div className="text-right text-sm font-bold">{Object.entries(owed).map(([cur, v]) => <span key={cur} className="block">{formatMoney(v, cur)}</span>)}</div>
                 </div>
                 {mine.length > 0 && <div className="flex flex-wrap gap-x-3 text-xs">{mine.slice(0, 5).map((d) => <Link key={d.id} className="font-semibold text-brand-700 underline dark:text-brand-400" to={`/debts/${d.id}`}>{d.description.slice(0, 24)}</Link>)}</div>}

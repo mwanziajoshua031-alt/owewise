@@ -19,6 +19,7 @@ import BizDebtDetail from './pages/biz/BizDebtDetail'
 import BizCustomers from './pages/biz/BizCustomers'
 import NewRequest from './pages/biz/NewRequest'
 import BizSettings from './pages/biz/BizSettings'
+import Reminders from './pages/biz/Reminders'
 import BizReports from './pages/biz/BizReports'
 import Alerts from './pages/Alerts'
 import Bills from './pages/Bills'
@@ -86,6 +87,7 @@ function BusinessApp() {
           <Route path="debts/:id" element={<BizDebtDetail />} />
           <Route path="new" element={<NewRequest />} />
           <Route path="customers" element={<BizCustomers />} />
+          <Route path="reminders" element={<Reminders />} />
           {owner && <Route path="reports" element={<BizReports />} />}
           {owner && <Route path="notifications" element={<Alerts />} />}
           <Route path="settings" element={<BizSettings />} />

@@ -4,6 +4,7 @@ import { loadDebts, useLoad, type BizStatus } from '../../lib/biz'
 import { formatMoney } from '../../lib/money'
 import { BizBadge } from '../../components/biz'
 import { NewBadge, useUnread } from '../../lib/unread'
+import { BranchChips, byBranch, useBranches, type BranchSel } from '../../components/branches'
 import { Empty, ErrorBox, fmtDate, PageHeader, Spinner } from '../../components/ui'
 
 const FILTERS: { k: 'all' | BizStatus; l: string }[] = [
@@ -15,14 +16,17 @@ export default function BizDebts() {
   const { data, loading, error, reload } = useLoad(loadDebts, [])
   const [f, setF] = useState<'all' | BizStatus>('all')
   const [q, setQ] = useState('')
+  const [sel, setSel] = useState<BranchSel>('')
+  const { data: branches } = useBranches()
   const { counts } = useUnread()
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
-  const rows = data.filter((d) => (f === 'all' || d.status === f) && (!q || (d.customer_name + d.description + d.customer_phone).toLowerCase().includes(q.toLowerCase())))
+  const rows = byBranch(data, sel).filter((d) => (f === 'all' || d.status === f) && (!q || (d.customer_name + d.description + d.customer_phone).toLowerCase().includes(q.toLowerCase())))
   return (
     <>
       <PageHeader title="Debts" right={<span className="flex gap-2"><Link to="/new?mode=quick" className="btn-secondary">Quick record</Link><Link to="/new" className="btn-primary">New request</Link></span>} />
       <input className="input" placeholder="Search customer or description" aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+      <BranchChips branches={branches ?? []} value={sel} onChange={setSel} hasUntagged={data.some((d) => !d.branch_id)} />
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Filter">
         {FILTERS.map((x) => <button key={x.k} role="tab" aria-selected={f === x.k} onClick={() => setF(x.k)} className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${f === x.k ? 'bg-navy-900 text-white dark:bg-brand-600' : 'bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-200'}`}>{x.l}</button>)}
       </div>

@@ -3,12 +3,14 @@ import { supabase } from '../lib/supabase'
 import { call, useLoad, type MyInvite, type StaffInvite, type StaffMember } from '../lib/biz'
 import { useAccount } from '../lib/account'
 import { Banner, fmtDate, Modal } from './ui'
+import { useBranches } from './branches'
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 /** Owner only (Settings): invite staff by email, revoke pending invites, remove staff. */
 export function StaffManager() {
   const { business } = useAccount()
+  const { data: branches } = useBranches()
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null)
@@ -83,7 +85,16 @@ export function StaffManager() {
             {data.staff.map((s) => (
               <li key={s.user_id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 p-2 text-sm dark:border-white/10">
                 <span className="min-w-0"><span className="block truncate">{s.email}</span><span className="block text-xs text-slate-500">Joined {fmtDate(s.joined_at)}</span></span>
-                <button className="shrink-0 text-xs font-semibold text-red-600 underline" onClick={() => setRemoving(s)}>Remove</button>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  {(branches?.length ?? 0) > 0 && (
+                    <select className="rounded-lg border border-slate-300 bg-transparent px-1 py-0.5 text-xs dark:border-white/20" aria-label={`Default branch for ${s.email}`} value={s.branch_id ?? ''}
+                      onChange={async (e) => { setActionErr(''); const r = await call('set_staff_branch', { p_user: s.user_id, p_branch: e.target.value || null }); if (r.error) return setActionErr(r.error); reload() }}>
+                      <option value="">No default branch</option>
+                      {(branches ?? []).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  )}
+                  <button className="text-xs font-semibold text-red-600 underline" onClick={() => setRemoving(s)}>Remove</button>
+                </span>
               </li>
             ))}
           </ul>

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useAccount } from '../../lib/account'
-import { loadDebts, useLoad, type BizDebt } from '../../lib/biz'
+import { useState } from 'react'
+import { call, loadDebts, useLoad, type BizDebt, type ReminderRow } from '../../lib/biz'
+import { BranchChips, byBranch, useBranches, type BranchSel } from '../../components/branches'
 import { formatMoney } from '../../lib/money'
 import { BizBadge } from '../../components/biz'
 import { NewBadge, useUnread } from '../../lib/unread'
@@ -21,9 +23,13 @@ export default function BizHome() {
   const { business, role } = useAccount()
   const { counts, total } = useUnread()
   const { data, loading, error, reload } = useLoad(loadDebts, [])
+  const { data: branches } = useBranches()
+  const { data: due } = useLoad(async () => (await call<ReminderRow[]>('reminders_due', {})).data ?? [], [])
+  const [sel, setSel] = useState<BranchSel>('')
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
-  const live = data.filter((d) => d.status !== 'cancelled')
+  const scoped = byBranch(data, sel)
+  const live = scoped.filter((d) => d.status !== 'cancelled')
   const open = live.filter((d) => d.outstanding > 0)
   const overdue = open.filter((d) => d.status === 'overdue')
   const collected = live.filter((d) => d.paid_total > 0)
@@ -31,6 +37,8 @@ export default function BizHome() {
   return (
     <>
       <h1 className="text-xl font-bold">Hello, {business?.name}</h1>
+      <BranchChips branches={branches ?? []} value={sel} onChange={setSel} hasUntagged={data.some((d) => !d.branch_id)} />
+      {due && due.length > 0 && <Link to="/reminders" className="card block border-l-4 border-l-amber-500 text-sm font-semibold">{due.length} reminder{due.length === 1 ? '' : 's'} to send today<span className="block text-xs font-normal text-slate-500">Tap to see who to remind.</span></Link>}
       {total > 0 && <Link to="/debts" className="card block border-l-4 border-l-red-500 text-sm font-semibold">You have {total} new message{total === 1 ? '' : 's'} from customers</Link>}
       <div className="grid grid-cols-2 gap-3">
         <div className="card"><p className="text-xs text-slate-500">Owed to you</p><p className="text-lg font-extrabold"><Money t={totals(open, (d) => d.outstanding)} /></p></div>
@@ -41,11 +49,11 @@ export default function BizHome() {
       </div>
       <div className={`grid gap-2 ${role === 'staff' ? 'grid-cols-1' : 'grid-cols-2'}`}><Link to="/new?mode=quick" className="btn-secondary">Quick record</Link>{role !== 'staff' && <Link to="/reports" className="btn-secondary">Reports</Link>}</div>
       <div className="flex items-center justify-between"><h2 className="font-bold">Recent requests</h2><Link className="text-sm font-semibold underline" to="/debts">See all</Link></div>
-      {data.length === 0 ? (
+      {scoped.length === 0 && data.length > 0 ? <Empty title="No debts in this branch" hint="Tag debts with a branch when you record them." /> : data.length === 0 ? (
         <Empty title="No debt requests yet" hint="Send your first debt request to a customer. They review it, confirm it, then can pay you by M-Pesa." action={<Link className="btn-primary" to="/new">Send debt request</Link>} />
       ) : (
         <ul className="space-y-2">
-          {data.slice(0, 6).map((d) => (
+          {scoped.slice(0, 6).map((d) => (
             <li key={d.id}><Link to={`/debts/${d.id}`} className="card flex items-center justify-between gap-2">
               <span className="min-w-0"><span className="block truncate font-semibold">{d.customer_name}<NewBadge n={counts[d.id]} /></span><span className="block truncate text-xs text-slate-500">{d.description} · due {fmtDate(d.due_date)}</span></span>
               <span className="shrink-0 text-right"><span className="block text-sm font-bold">{formatMoney(d.outstanding, d.currency)}</span><BizBadge status={d.status} as="business" /></span>

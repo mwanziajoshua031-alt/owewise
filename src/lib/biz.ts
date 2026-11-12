@@ -8,9 +8,9 @@ export type BizDebt = {
   customer_name: string; customer_phone: string; amount: number; currency: string; description: string
   incurred_on: string; due_date: string; invoice_path: string | null; sent_at: string
   claimed_at: string | null; customer_confirmed_at: string | null; cancelled_at: string | null; cancel_reason: string | null
-  created_at: string; source: 'request' | 'quick'; paid_total: number; pending_total: number; outstanding: number; status: BizStatus
+  created_at: string; source: 'request' | 'quick'; branch_id: string | null; paid_total: number; pending_total: number; outstanding: number; status: BizStatus
 }
-export const DEBT_COLS = 'id,business_id,business_customer_id,customer_user_id,customer_name,customer_phone,amount,currency,description,incurred_on,due_date,invoice_path,sent_at,claimed_at,customer_confirmed_at,cancelled_at,cancel_reason,created_at,source,paid_total,pending_total,outstanding,status'
+export const DEBT_COLS = 'id,business_id,business_customer_id,customer_user_id,customer_name,customer_phone,amount,currency,description,incurred_on,due_date,invoice_path,sent_at,claimed_at,customer_confirmed_at,cancelled_at,cancel_reason,created_at,source,paid_total,pending_total,outstanding,status,branch_id'
 
 export type BizPayment = {
   id: string; debt_id: string; kind: 'payment' | 'reversal'; reverses_payment_id: string | null; amount: number; currency: string
@@ -25,7 +25,17 @@ export type Receipt = {
 }
 export type Dispute = { id: string; reason: string; details: string; status: 'open' | 'resolved' | 'withdrawn'; resolution: string | null; resolution_note: string | null; created_at: string }
 export type DebtMessage = { id: string; sender_role: 'customer' | 'business' | 'system'; kind: string; body: string; requested_due_date: string | null; status: 'pending' | 'approved' | 'rejected' | null; created_at: string }
-export type StaffMember = { user_id: string; email: string; joined_at: string }
+export type StaffMember = { user_id: string; email: string; joined_at: string; branch_id: string | null }
+export type Branch = { id: string; name: string }
+export type Trust = {
+  finished: number; on_time: number; avg_days_late: number; worst_days_late: number
+  overdue_now: { currency: string; amount: number; debts: number }[]
+  rating: 'reliable' | 'mixed' | 'risky' | 'not_enough'
+}
+export type ReminderRow = {
+  debt_id: string; customer_name: string; customer_phone: string; description: string; currency: string; outstanding: number
+  due_date: string; days_to_due: number; stage: 'overdue' | 'due_today' | 'due_soon'; last_reminded: string | null; customer_user_id: string | null
+}
 export type StaffInvite = { id: string; email: string; expires_at: string }
 export type MyInvite = { id: string; business_name: string; expires_at: string }
 export type Business = { id: string; name: string; owner_name: string | null; phone: string | null; email: string | null; category: string | null; location: string | null; status: 'active' | 'suspended' }
@@ -41,6 +51,9 @@ export const STATUS_TEXT: Record<BizStatus, { business: string; customer: string
 }
 
 const ERRORS: Record<string, string> = {
+  invalid_name: 'Enter a name (up to 60 characters).',
+  branch_exists: 'You already have a branch with that name.',
+  branch_limit_reached: 'You can have up to 20 branches.',
   not_authenticated: 'Please sign in again.',
   not_a_business: 'This action needs a business account.',
   business_suspended: 'This business account is suspended.',
