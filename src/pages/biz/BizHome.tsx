@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAccount } from '../../lib/account'
 import { useState } from 'react'
-import { call, loadDebts, useLoad, type BizDebt, type ReminderRow } from '../../lib/biz'
+import { call, loadDebts, useLoad, type BizDebt, type JoinRequest, type ReminderRow } from '../../lib/biz'
 import { BranchChips, byBranch, useBranches, type BranchSel } from '../../components/branches'
 import { formatMoney } from '../../lib/money'
 import { BizBadge } from '../../components/biz'
@@ -25,6 +25,7 @@ export default function BizHome() {
   const { data, loading, error, reload } = useLoad(loadDebts, [])
   const { data: branches } = useBranches()
   const { data: due } = useLoad(async () => (await call<ReminderRow[]>('reminders_due', {})).data ?? [], [])
+  const { data: joins } = useLoad(async () => (await call<JoinRequest[]>('list_join_requests', {})).data ?? [], [])
   const [sel, setSel] = useState<BranchSel>('')
   if (loading) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
@@ -39,6 +40,7 @@ export default function BizHome() {
       <h1 className="text-xl font-bold">Hello, {business?.name}</h1>
       <BranchChips branches={branches ?? []} value={sel} onChange={setSel} hasUntagged={data.some((d) => !d.branch_id)} />
       {due && due.length > 0 && <Link to="/reminders" className="card block border-l-4 border-l-amber-500 text-sm font-semibold">{due.length} reminder{due.length === 1 ? '' : 's'} to send today<span className="block text-xs font-normal text-slate-500">Tap to see who to remind.</span></Link>}
+      {joins && joins.length > 0 && <Link to="/customers" className="card block border-l-4 border-l-brand-600 text-sm font-semibold">{joins.length} {joins.length === 1 ? 'person wants' : 'people want'} to connect<span className="block text-xs font-normal text-slate-500">Tap to confirm who they are.</span></Link>}
       {total > 0 && <Link to="/debts" className="card block border-l-4 border-l-red-500 text-sm font-semibold">You have {total} new message{total === 1 ? '' : 's'} from customers</Link>}
       <div className="grid grid-cols-2 gap-3">
         <div className="card"><p className="text-xs text-slate-500">Owed to you</p><p className="text-lg font-extrabold"><Money t={totals(open, (d) => d.outstanding)} /></p></div>

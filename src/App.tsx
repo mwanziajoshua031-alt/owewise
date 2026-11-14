@@ -11,7 +11,7 @@ import Payments from './pages/Payments'
 import { Privacy, Terms } from './pages/Legal'
 import { Spinner } from './components/ui'
 import { AccountProvider, useAccount } from './lib/account'
-import { saveClaimToken, readClaimToken } from './lib/biz'
+import { saveClaimToken, readClaimToken, saveJoinToken, readJoinToken } from './lib/biz'
 import BizLayout from './pages/biz/BizLayout'
 import BizHome from './pages/biz/BizHome'
 import BizDebts from './pages/biz/BizDebts'
@@ -25,6 +25,7 @@ import Alerts from './pages/Alerts'
 import Bills from './pages/Bills'
 import BillDetail from './pages/BillDetail'
 import Claim from './pages/Claim'
+import Join from './pages/Join'
 import { UnreadProvider } from './lib/unread'
 const Admin = lazy(() => import('./pages/Admin'))
 
@@ -68,9 +69,18 @@ function captureClaim() {
   }
 }
 
+// A join link looks like /join#<token>. Same idea: kept on this device until the person signs in.
+function captureJoin() {
+  if (window.location.pathname === '/join' && window.location.hash.length > 20) {
+    saveJoinToken(window.location.hash.slice(1))
+    window.history.replaceState(null, '', '/join')
+  }
+}
+
 function ClaimRedirect() {
   const loc = useLocation()
   if (readClaimToken() && loc.pathname !== '/claim') return <Navigate to="/claim" replace />
+  if (!readClaimToken() && readJoinToken() && loc.pathname !== '/join') return <Navigate to="/join" replace />
   return null
 }
 
@@ -92,6 +102,7 @@ function BusinessApp() {
           {owner && <Route path="notifications" element={<Alerts />} />}
           <Route path="settings" element={<BizSettings />} />
           <Route path="claim" element={<Claim />} />
+          <Route path="join" element={<Join />} />
           {owner && <Route path="admin" element={<Admin />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
@@ -113,6 +124,7 @@ function CustomerApp() {
             <Route path="bills" element={<Bills />} />
             <Route path="bills/:id" element={<BillDetail />} />
             <Route path="claim" element={<Claim />} />
+            <Route path="join" element={<Join />} />
           <Route path="admin" element={<Admin />} />
             <Route path="payments" element={<Payments />} />
             <Route path="calendar" element={<Calendar />} />
@@ -138,6 +150,7 @@ function RoleSwitch() {
 function Gate() {
   const { session, loading, recovery } = useAuth()
   captureClaim()
+  captureJoin()
   if (loading) return <Spinner />
   if (!session) return <Login />
   if (recovery) return <NewPassword />

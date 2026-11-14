@@ -8,6 +8,7 @@ import { call, friendly, useIsAdmin, useLoad } from '../../lib/biz'
 import { Banner, Field, Modal, PageHeader } from '../../components/ui'
 import { StaffManager } from '../../components/staff'
 import { BranchManager } from '../../components/branches'
+import { JoinLinkCard } from '../../components/join'
 
 type MStatus = { configured: boolean; enabled?: boolean; environment?: string; account_type?: string; shortcode?: string; till_number?: string | null }
 
@@ -121,6 +122,7 @@ function OwnerSettings() {
         <button className="btn-primary w-full">Save</button>
       </form>
       {isAdmin && <Link to="/admin" className="card block text-sm font-semibold text-brand-700 underline dark:text-brand-400">Open admin panel</Link>}
+      <JoinLinkCard />
       <BranchManager />
       <StaffManager />
       <MpesaCard />

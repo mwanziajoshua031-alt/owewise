@@ -5,6 +5,7 @@ import { useStore } from '../lib/store'
 import { AddDebtModal, AddPaymentModal } from './forms'
 import { Banner, BrandMark } from './ui'
 import { StaffInviteBanner } from './staff'
+import { JoinCodeBanner } from './join'
 import { useUnread } from '../lib/unread'
 
 type UI = { addDebt: (creditorId?: string) => void; addPayment: (debtId?: string) => void }
@@ -85,6 +86,7 @@ export default function Layout() {
               </Banner>
             )}
             <StaffInviteBanner />
+            <JoinCodeBanner />
             <Outlet />
           </main>
         </div>

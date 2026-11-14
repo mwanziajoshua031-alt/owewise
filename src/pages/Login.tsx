@@ -1,19 +1,20 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { readClaimToken } from '../lib/biz'
+import { readClaimToken, readJoinToken } from '../lib/biz'
 import { BrandMark } from '../components/ui'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
 export default function Login() {
   const { signIn, signUp, resetPassword } = useAuth()
-  const [mode, setMode] = useState<Mode>(readClaimToken() ? 'signup' : 'signin')
+  const [mode, setMode] = useState<Mode>(readClaimToken() || readJoinToken() ? 'signup' : 'signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [agree, setAgree] = useState(false)
-  const claiming = !!readClaimToken()
+  const joining = !!readJoinToken()
+  const claiming = !!readClaimToken() || joining
   const [kind, setKind] = useState<'customer' | 'business'>('customer')
   const [bizName, setBizName] = useState('')
   const [bizCategory, setBizCategory] = useState('')
@@ -57,7 +58,7 @@ export default function Login() {
         </div>
         <form onSubmit={submit} noValidate className="card space-y-3">
           <h2 className="text-lg font-bold">{mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'}</h2>
-          {claiming && <p className="rounded-xl bg-sky-50 p-3 text-sm text-sky-900">A business sent you a debt request. Sign in or create a customer account to review it.</p>}
+          {claiming && <p className="rounded-xl bg-sky-50 p-3 text-sm text-sky-900">{joining ? 'A business invited you to connect on OweWise. Sign in or create a customer account to continue.' : 'A business sent you a debt request. Sign in or create a customer account to review it.'}</p>}
           {mode === 'signup' && !claiming && (
             <div role="radiogroup" aria-label="Account type" className="grid grid-cols-2 gap-2">
               {([['customer', 'I owe / I pay'], ['business', 'I am a business']] as const).map(([k, l]) => (

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAccount } from '../../lib/account'
 import { call, loadDebts, useLoad, waLink, type BizDebt, type Trust } from '../../lib/biz'
 import { TrustBadge } from '../../components/trust'
+import { JoinRequests } from '../../components/join'
 import { formatMoney, parseAmountInput } from '../../lib/money'
 import { downloadStatement } from '../../lib/statementPdf'
 import { Empty, ErrorBox, fmtDate, Modal, PageHeader, Spinner } from '../../components/ui'
@@ -21,11 +22,12 @@ export default function BizCustomers() {
     for (const r of t.data ?? []) trust[r.customer_id] = r.trust
     return { customers: (c.data ?? []) as Cust[], debts: d, trust }
   }, [])
-  if (loading) return <Spinner />
+  if (loading && !data) return <Spinner />
   if (error || !data) return <ErrorBox message={error} onRetry={reload} />
   return (
     <>
       <PageHeader title="Customers" right={isStaff ? undefined : <Link to="/reports" className="btn-secondary">Reports</Link>} />
+      <JoinRequests customers={data.customers} onChanged={reload} />
       {data.customers.length === 0 ? <Empty title="No customers yet" hint="Customers are added automatically when you send a debt request or make a quick record." /> : (
         <ul className="space-y-2">
           {data.customers.map((c) => {

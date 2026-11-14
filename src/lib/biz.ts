@@ -27,6 +27,8 @@ export type Dispute = { id: string; reason: string; details: string; status: 'op
 export type DebtMessage = { id: string; sender_role: 'customer' | 'business' | 'system'; kind: string; body: string; requested_due_date: string | null; status: 'pending' | 'approved' | 'rejected' | null; created_at: string }
 export type StaffMember = { user_id: string; email: string; joined_at: string; branch_id: string | null }
 export type Branch = { id: string; name: string }
+export type JoinRequest = { id: string; name: string; status: 'pending' | 'code_sent' | 'locked'; created_at: string }
+export type MyJoinRequest = { id: string; business_name: string; status: 'waiting' | 'code_sent' | 'locked' }
 export type Trust = {
   finished: number; on_time: number; avg_days_late: number; worst_days_late: number
   overdue_now: { currency: string; amount: number; debts: number }[]
@@ -51,6 +53,8 @@ export const STATUS_TEXT: Record<BizStatus, { business: string; customer: string
 }
 
 const ERRORS: Record<string, string> = {
+  join_limit_reached: 'This business has had too many join requests today. Try again tomorrow.',
+  customer_already_linked: 'That customer is already connected to an OweWise account.',
   invalid_name: 'Enter a name (up to 60 characters).',
   branch_exists: 'You already have a branch with that name.',
   branch_limit_reached: 'You can have up to 20 branches.',
@@ -140,6 +144,14 @@ export async function loadDebts(): Promise<BizDebt[]> {
   if (error) throw new Error(error.message)
   return (data ?? []) as unknown as BizDebt[]
 }
+
+export function joinLink(token: string): string {
+  return `${window.location.origin}/join#${token}`
+}
+const JOIN_KEY = 'owewise.join'
+export function saveJoinToken(t: string) { try { localStorage.setItem(JOIN_KEY, t) } catch { /* ignore */ } }
+export function readJoinToken(): string | null { try { return localStorage.getItem(JOIN_KEY) } catch { return null } }
+export function clearJoinToken() { try { localStorage.removeItem(JOIN_KEY) } catch { /* ignore */ } }
 
 export function claimLink(token: string): string {
   return `${window.location.origin}/claim#${token}`
